@@ -17,7 +17,8 @@ namespace ScoreboardLiveApiExample {
     private static readonly HttpClient client = new HttpClient();
     private static readonly Routes routes = new Routes("http://192.168.2.102/monkeyscore");
 
-    private static ApiHelper api = new ApiHelper("http://192.168.2.102/monkeyscore");
+    //private static ApiHelper api = new ApiHelper("http://192.168.2.102/monkeyscore");
+    private static ApiHelper api = new ApiHelper("http://192.168.43.253/monkeyscore/");
     private static readonly string keyStoreFile = string.Format("{0}scoreboardTestAppKeys.bin", AppDomain.CurrentDomain.BaseDirectory);
 
     public static string ByteArrayToString(byte[] ba) {
@@ -184,37 +185,118 @@ namespace ScoreboardLiveApiExample {
       return null;
     }
 
+    static async Task<Unit> SelectUnit() {
+      List<Unit> units = new List<Unit>();
+      // First try and fetch all units to select from at server
+      Console.Clear();
+      Console.WriteLine("Fetching all available units from server");
+      try {
+        units.AddRange(await api.GetUnits());
+      } catch (Exception e) {
+        Console.WriteLine(e.Message);
+        return null;
+      }
+      // Print them out
+      int i = 1;
+      units.ForEach(unit => Console.WriteLine("{0}. {1}", i++, unit.Name));
+      // Have the user select one
+      Console.Write("Select a unit to use: ");
+      int.TryParse(Console.ReadLine(), out int selection);
+      // Check so that the number is valid
+      if (selection < 1 || selection > units.Count) {
+        return await SelectUnit();
+      }
+      return units[selection - 1];
+    }
+
+    static async Task<Device> RegisterWithUnit(Unit unit, LocalKeyStore keyStore) {
+      // Get activation code from user
+      Console.Clear();
+      Console.WriteLine("This device is not registered with {0}.", unit.Name);
+      Console.Write("Enter activation code for {0}: ", unit.Name);
+      string activationCode = Console.ReadLine().Trim();
+      // Register this code with the server
+      Device deviceCredentials = null;
+      try {
+        deviceCredentials = await api.RegisterDevice(activationCode);
+      } catch (Exception e) {
+        Console.WriteLine(e.Message);
+        Console.ReadKey();
+      }
+      // If registration was a success, save the credentials to the key store
+      if (deviceCredentials != null) {
+        keyStore.Set(deviceCredentials);
+        keyStore.Save(keyStoreFile);
+      }
+      return deviceCredentials;
+    }
+
+    static async Task<bool> CheckCredentials(Unit unit, Device device, LocalKeyStore keyStore) {
+      Console.WriteLine("Checking so that the credentials on file for {0} are still valid...", unit.Name);
+      bool valid = false;
+      try {
+        valid = await api.CheckCredentials(device);
+      } catch (Exception e) {
+        // We end up here if it cant be determined if the credentials are valid or not,
+        // so don't discard the keys here, just return.
+        Console.WriteLine(e.Message);
+        return false; 
+      }
+      if (valid) {
+        Console.WriteLine("Credentials checked out OK.");
+      } else {
+        Console.WriteLine("Credentials no longer valid. Removing from key store.");
+        keyStore.Remove(device);
+        keyStore.Save(keyStoreFile);
+      }
+      return valid;
+    }
 
     static void Main(string[] args) {
-      try {
-        // First try and fetch all units to select from at server
-        try {
-          Console.WriteLine("Fetching all available units from server");
-          Unit.UnitResponse units = api.GetUnits().Result;
-        } catch (Exception e) {
-        }
+      // Select a unit
+      Unit selectedUnit = SelectUnit().Result;
+      if (selectedUnit == null) return;
+      Console.WriteLine("Unit {0} was selected.", selectedUnit.Name);
 
-/*
-        Dictionary<Unit, Device> pairs = program.AssociateUnitsWithDeviceRegistrations(units).Result;
-        Unit selectedUnit = program.SelectUnit(pairs);
-        Console.WriteLine("Selected unit: {0}", selectedUnit);
-        Device selectedDevice = pairs[selectedUnit];
-        if (selectedDevice == null) {
-          Console.WriteLine("This device is not registered with the unit {0}.", selectedUnit.Name);
-          selectedDevice = program.RegisterUnit().Result;
-          if (selectedDevice == null) {
-            Console.WriteLine("Registration failed");
-          }
-          else {
-            Console.WriteLine("Registration successful. New device:");
-            Console.WriteLine(selectedDevice);
-          }
-        }
+      // Load the keystore, and select the appropriate key to use for this unit.
+      // If this device is not registered with that unit, do registration
+      LocalKeyStore keyStore = LocalKeyStore.Load(keyStoreFile);
+      while (keyStore.Get(selectedUnit.UnitID) == null) {
+        RegisterWithUnit(selectedUnit, keyStore).Wait();
       }
-      catch (Exception e) {
-        Console.WriteLine(e.Message);
+
+      // Check the credentials to make sure they are still valid
+      Device deviceCredentials = keyStore.Get(selectedUnit.UnitID);
+      if (!CheckCredentials(selectedUnit, deviceCredentials, keyStore).Result) {
+        Console.ReadKey();
+        return;
       }
-      */
+
+
+
+      Console.ReadKey();
+
+      /*
+              Dictionary<Unit, Device> pairs = program.AssociateUnitsWithDeviceRegistrations(units).Result;
+              Unit selectedUnit = program.SelectUnit(pairs);
+              Console.WriteLine("Selected unit: {0}", selectedUnit);
+              Device selectedDevice = pairs[selectedUnit];
+              if (selectedDevice == null) {
+                Console.WriteLine("This device is not registered with the unit {0}.", selectedUnit.Name);
+                selectedDevice = program.RegisterUnit().Result;
+                if (selectedDevice == null) {
+                  Console.WriteLine("Registration failed");
+                }
+                else {
+                  Console.WriteLine("Registration successful. New device:");
+                  Console.WriteLine(selectedDevice);
+                }
+              }
+            }
+            catch (Exception e) {
+              Console.WriteLine(e.Message);
+            }
+            */
     }
   }
 }

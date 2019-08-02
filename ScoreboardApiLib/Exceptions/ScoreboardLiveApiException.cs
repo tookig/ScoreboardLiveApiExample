@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Net;
 using System.Collections.Generic;
+using System.Text;
+using System.Linq;
 
-namespace ScoreboardLiveApi.Exceptions {
+namespace ScoreboardLiveApi {
   /// <summary>
   /// Scoreboard live API exception.
   /// </summary>
@@ -28,7 +30,36 @@ namespace ScoreboardLiveApi.Exceptions {
     /// <value>The scoreboard API errors.</value>
     public List<string> ScoreboardApiErrors { get; set; }
 
-    public ScoreboardLiveApiException(HttpStatusCode statusCode, ScoreboardResponse response) {
+    /// <summary>
+    /// Constructor
+    /// </summary>
+    /// <param name="statusCode">Http status code</param>
+    /// <param name="response">Scoreboard live response</param>
+    public ScoreboardLiveApiException(HttpStatusCode statusCode, ScoreboardResponse response) : base(messageText(statusCode, response)) {
+      StatusCode = statusCode;
+      ScoreboardApiErrors = new List<string>();
+      if ((response != null) && (response.Errors != null)) {
+        ScoreboardApiErrors.AddRange(response.Errors);
+      }
+    }
+
+    /// <summary>
+    /// Constructor
+    /// </summary>
+    /// <param name="statusCode">Http status code</param>
+    public ScoreboardLiveApiException(HttpStatusCode statusCode) : this(statusCode, null) {
+    }
+
+    private static string messageText(HttpStatusCode statusCode, ScoreboardResponse response) {
+      StringBuilder sb = new StringBuilder();
+      sb.AppendFormat("The request finished with status code {0} ({1}). ", statusCode, (int)statusCode);
+      if ((response == null) || (response.Errors.Count == 0)) {
+        sb.Append("No additional info was given.");
+      } else {
+        sb.AppendFormat("The following reason{0} given:{1}", response.Errors.Count > 1 ? "s were" : " was", Environment.NewLine);
+        sb.Append(string.Join(string.Format(" - {0}", Environment.NewLine), response.Errors));
+      }
+      return sb.ToString();
     }
   }
 }
