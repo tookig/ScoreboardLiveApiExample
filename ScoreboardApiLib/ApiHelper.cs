@@ -105,6 +105,31 @@ namespace ScoreboardLiveApi {
       throw (new ScoreboardLiveApiException(response.StatusCode, scoreboardResponse));
     }
 
+    public async Task<List<Tournament>> GetTournaments(Device device, int limit) {
+      // Create the request content. Limit is the max number of the most recent
+      // tournaments to return.
+      Dictionary<string, string> formData = new Dictionary<string, string> {
+        { "randomStuff", Guid.NewGuid().ToString("n") },
+        { "limit", limit.ToString() }
+      };
+      HttpContent content = new FormUrlEncodedContent(formData);
+      // Create the HMAC from the http content
+      string authentication = await CalculateHMAC(device, content);
+      // Send the request
+      HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, string.Format("{0}api/unit/get_tournaments", AppendSlash(BaseUrl)));
+      request.Headers.Add("Authorization", authentication);
+      request.Content = content;
+      HttpResponseMessage response = await m_client.SendAsync(request);
+      // Try and parse the tournament json
+      Tournament.TournamentResponse tournamentResponse = await TryReadResponse<Tournament.TournamentResponse>(response);
+      // Throw error if request is not successfull
+      if (!response.IsSuccessStatusCode) {
+        throw (new ScoreboardLiveApiException(response.StatusCode, tournamentResponse));
+      }
+      // Return the tournaments
+      return tournamentResponse.Tournaments;
+    }
+
     /// <summary>
     /// Helper function that tries to read a json response. If it fails, it returns null unless the
     /// request itself succeeded; in that case there should be valid json available, and this function
