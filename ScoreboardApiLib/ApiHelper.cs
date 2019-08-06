@@ -130,6 +130,43 @@ namespace ScoreboardLiveApi {
       return tournamentResponse.Tournaments;
     }
 
+    public async Task<Match> CreateOnTheFlyMatch(Device device, Tournament tournament, Match match) {
+      // Create the request content.
+      Dictionary<string, string> formData = new Dictionary<string, string> {
+        { "randomStuff", Guid.NewGuid().ToString("n") },
+        { "category", match.Category },
+        { "sequencenumber", match.TournamentMatchNumber.ToString() },
+        { "starttime", match.StartTime.ToString("yyyy-MM-dd HH:mm") },
+        { "team1player1name", match.Team1Player1Name },
+        { "team1player1team", match.Team1Player1Team },
+        { "team1player2name", match.Team1Player2Name },
+        { "team1player2team", match.Team1Player2Team },
+        { "team2player1name", match.Team2Player1Name },
+        { "team2player1team", match.Team2Player1Team },
+        { "team2player2name", match.Team2Player2Name },
+        { "team2player2team", match.Team2Player2Team }
+      };
+      if (tournament != null) {
+        formData.Add("tournamentid", tournament.TournamentID.ToString());
+      }
+      HttpContent content = new FormUrlEncodedContent(formData);
+      // Create the HMAC from the http content
+      string authentication = await CalculateHMAC(device, content);
+      // Send the request
+      HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, string.Format("{0}api/match/create_onthefly_match", AppendSlash(BaseUrl)));
+      request.Headers.Add("Authorization", authentication);
+      request.Content = content;
+      HttpResponseMessage response = await m_client.SendAsync(request);
+      // Try and parse the new match json
+      Match.MatchResponse matchResponse = await TryReadResponse<Match.MatchResponse>(response);
+      // Throw error if request is not successfull
+      if (!response.IsSuccessStatusCode) {
+        throw (new ScoreboardLiveApiException(response.StatusCode, matchResponse));
+      }
+      // Return the tournaments
+      return matchResponse.Match;
+    }
+
     /// <summary>
     /// Helper function that tries to read a json response. If it fails, it returns null unless the
     /// request itself succeeded; in that case there should be valid json available, and this function

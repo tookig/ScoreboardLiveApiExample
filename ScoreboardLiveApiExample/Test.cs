@@ -1,19 +1,12 @@
 ﻿using System;
 using System.Threading.Tasks;
-using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Collections.Generic;
-using System.Runtime.Serialization.Json;
 using ScoreboardLiveApi;
-using System.Net;
-using System.Security.Cryptography;
-using System.Linq;
-using System.Text;
 
 namespace ScoreboardLiveApiExample {
   class Test {
-    //private static ApiHelper api = new ApiHelper("http://192.168.2.102/monkeyscore");
-    private static ApiHelper api = new ApiHelper("http://192.168.43.253/monkeyscore/");
+    private static ApiHelper api = new ApiHelper("http://192.168.2.102/monkeyscore");
+    //private static ApiHelper api = new ApiHelper("http://192.168.43.253/monkeyscore/");
     private static readonly string keyStoreFile = string.Format("{0}scoreboardTestAppKeys.bin", AppDomain.CurrentDomain.BaseDirectory);
 
     static async Task<Unit> SelectUnit() {
@@ -120,6 +113,25 @@ namespace ScoreboardLiveApiExample {
       return await SelectTournament(unit, device);
     }
 
+    static async Task<Match> CreateRandomMatch(Device device, Tournament tournament) {
+      // Create a random match
+      Console.WriteLine("Creating a random match and uploading to server...");
+      Match match = RandomStuff.RandomMatch();
+      // Send request
+      Match serverMatch = null;
+      try {
+        serverMatch = await api.CreateOnTheFlyMatch(device, tournament, match);
+      }
+      catch (Exception e) {
+        Console.WriteLine(e.Message);
+        return null;
+      }
+      Console.WriteLine("The following match was created:");
+      Console.WriteLine(serverMatch);
+      Console.WriteLine();
+      return serverMatch;
+    }
+
     static void Main(string[] args) {
       // Select a unit
       Unit selectedUnit = SelectUnit().Result;
@@ -143,6 +155,9 @@ namespace ScoreboardLiveApiExample {
       // Select a tournament to add matches to
       Tournament selectedTournament = SelectTournament(selectedUnit, deviceCredentials).Result;
       Console.WriteLine("Selected tournament: {0}", selectedTournament);
+
+      // Create a random match
+      Match match = CreateRandomMatch(deviceCredentials, selectedTournament).Result;
 
       Console.ReadKey();
     }
