@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
+using System.Linq;
 
 namespace ScoreboardLiveApi {
   public class ApiHelper {
@@ -35,17 +36,8 @@ namespace ScoreboardLiveApi {
     /// </summary>
     /// <returns>The server response.</returns>
     public async Task<List<Unit>> GetUnits() {
-      // Since this is a simple GET request, no data needs to be appended to the
-      // request.
-      HttpResponseMessage response = await m_client.GetAsync(string.Format("{0}api/unit/get_units", AppendSlash(BaseUrl)));
-      // Parse the json
-      var unitResponse = await TryReadResponse<Unit.UnitResponse>(response);
-      // If an error occured, throw an exception
-      if (!response.IsSuccessStatusCode) {
-        throw (new ScoreboardLiveApiException(response.StatusCode, unitResponse));
-      }
-      // Return response
-      return unitResponse.Units;
+      Unit.UnitResponse response = await SendRequest<Unit.UnitResponse>("api/unit/get_units", null, null);
+      return response.Units;
     }
 
     /// <summary>
@@ -54,25 +46,19 @@ namespace ScoreboardLiveApi {
     /// <param name="activationCode">Activation code</param>
     /// <returns>The newly created credentials</returns>
     public async Task<Device> RegisterDevice(string activationCode) {
-      // Create the http data
+      // Create the post data
       Dictionary<string, string> formData = new Dictionary<string, string> {
         { "activationCode", activationCode }
       };
-      HttpContent content = new FormUrlEncodedContent(formData);
       // Send request
-      HttpResponseMessage response = await m_client.PostAsync(string.Format("{0}api/device/register_device", AppendSlash(BaseUrl)), content);
-      // Check response
-      Device.DeviceResponse deviceInfo = await TryReadResponse<Device.DeviceResponse>(response);
-      // If an error occured, throw an exception
-      if (!response.IsSuccessStatusCode) {
-        throw (new ScoreboardLiveApiException(response.StatusCode, deviceInfo));
-      }
-      // Return the new device credentials
-      return deviceInfo.Device;
+      Device.DeviceResponse deviceResponse = await SendRequest<Device.DeviceResponse>("api/device/register_device", null, formData);
+      return deviceResponse.Device;
     }
 
     /// <summary>
     /// Check if a set of credentials are still valid on the server.
+    /// This function can't use the generic SendRequest method since it needs to analyse the http
+    /// response code.
     /// </summary>
     /// <param name="device">Device credentials to check</param>
     /// <returns>True if still valid, false if not.</returns>
@@ -105,35 +91,33 @@ namespace ScoreboardLiveApi {
       throw (new ScoreboardLiveApiException(response.StatusCode, scoreboardResponse));
     }
 
+    /// <summary>
+    /// Get the tournaments available for a device
+    /// </summary>
+    /// <returns>Available tournaments</returns>
+    /// <param name="device">The device to get tournaments for</param>
+    /// <param name="limit">Max number of tournaments to get, with the most recent first. 0 if to get all of them.</param>
     public async Task<List<Tournament>> GetTournaments(Device device, int limit) {
-      // Create the request content. Limit is the max number of the most recent
+      // Create the post data. Limit is the max number of the most recent
       // tournaments to return.
       Dictionary<string, string> formData = new Dictionary<string, string> {
-        { "randomStuff", Guid.NewGuid().ToString("n") },
         { "limit", limit.ToString() }
       };
-      HttpContent content = new FormUrlEncodedContent(formData);
-      // Create the HMAC from the http content
-      string authentication = await CalculateHMAC(device, content);
-      // Send the request
-      HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, string.Format("{0}api/unit/get_tournaments", AppendSlash(BaseUrl)));
-      request.Headers.Add("Authorization", authentication);
-      request.Content = content;
-      HttpResponseMessage response = await m_client.SendAsync(request);
-      // Try and parse the tournament json
-      Tournament.TournamentResponse tournamentResponse = await TryReadResponse<Tournament.TournamentResponse>(response);
-      // Throw error if request is not successfull
-      if (!response.IsSuccessStatusCode) {
-        throw (new ScoreboardLiveApiException(response.StatusCode, tournamentResponse));
-      }
-      // Return the tournaments
+      Tournament.TournamentResponse tournamentResponse = await SendRequest<Tournament.TournamentResponse>("api/unit/get_tournaments", device, formData);
       return tournamentResponse.Tournaments;
     }
 
+    /// <summary>
+    /// Create a on-the-fly match.
+    /// </summary>
+    /// <returns>The newly created match</returns>
+    /// <param name="device">Device with server credentials</param>
+    /// <param name="tournament">The tournament to add the match to. Can be null, in that case the server will
+    ///                          try to figure out which tournament to use.</param>
+    /// <param name="match">The match to add</param>
     public async Task<Match> CreateOnTheFlyMatch(Device device, Tournament tournament, Match match) {
-      // Create the request content.
+      // Create the post data
       Dictionary<string, string> formData = new Dictionary<string, string> {
-        { "randomStuff", Guid.NewGuid().ToString("n") },
         { "category", match.Category },
         { "sequencenumber", match.TournamentMatchNumber.ToString() },
         { "starttime", match.StartTime.ToString("yyyy-MM-dd HH:mm") },
@@ -149,22 +133,73 @@ namespace ScoreboardLiveApi {
       if (tournament != null) {
         formData.Add("tournamentid", tournament.TournamentID.ToString());
       }
+      Match.MatchResponse matchResponse = await SendRequest<Match.MatchResponse>("api/match/create_onthefly_match", device, formData);
+      return matchResponse.Match;
+    }
+
+    /// <summary>
+    /// Get a list of all courts available for a device.
+    /// </summary>
+    /// <returns>Available courts</returns>
+    /// <param name="device">Device to look up courts for.</param>
+    public async Task<List<Court>> GetCourts(Device device) {
+      // Create the post data.
+      Dictionary<string, string> formData = new Dictionary<string, string> {
+        { "addvenueinfo", "1" } // Makes sure venue info is added to the returned json
+      };
+      Court.CourtResponse courtResponse = await SendRequest<Court.CourtResponse>("api/court/get_courts", device, formData);
+      return courtResponse.Courts;
+    }
+
+    /// <summary>
+    /// Assign a match to a court.
+    /// </summary>
+    /// <returns></returns>
+    /// <param name="device">Device credentials</param>
+    /// <param name="match">Match to be assigned</param>
+    /// <param name="court">Court for the match to be assigned to.</param>
+    public async Task AssignMatchToCourt(Device device, Match match, Court court) {
+      // Create the post data.
+      Dictionary<string, string> formData = new Dictionary<string, string> {
+        { "courtid", court.CourtID.ToString() },
+        { "matchid", match.MatchID.ToString() }
+      };
+      ScoreboardResponse response = await SendRequest<ScoreboardResponse>("api/court/assign_match", device, formData);
+    }
+
+    /// <summary>
+    /// Send a request to the scoreboard server
+    /// </summary>
+    /// <returns>Server response</returns>
+    /// <param name="route">Server route</param>
+    /// <param name="credentials">Device credentials. Null if no authorization should be used.</param>
+    /// <param name="postParams">Post parameters.</param>
+    /// <typeparam name="T">The type of response to expect from the server.</typeparam>
+    private async Task<T> SendRequest<T>(string route, Device credentials, Dictionary<string, string> postParams) where T : ScoreboardResponse {
+      // Create the request content.
+      Dictionary<string, string> formData = postParams != null ? new Dictionary<string, string>(postParams) : new Dictionary<string, string>();
+      formData.Add("randomStuff", Guid.NewGuid().ToString("n"));
       HttpContent content = new FormUrlEncodedContent(formData);
-      // Create the HMAC from the http content
-      string authentication = await CalculateHMAC(device, content);
+      // Create the request
+      HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, string.Format("{0}{1}", AppendSlash(BaseUrl), route)) {
+        Content = content
+      };
+      // Check if to use authentication
+      if (credentials != null) {
+        // Create the HMAC from the http content
+        string authentication = await CalculateHMAC(credentials, content);
+        request.Headers.Add("Authorization", authentication);
+      }
       // Send the request
-      HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, string.Format("{0}api/match/create_onthefly_match", AppendSlash(BaseUrl)));
-      request.Headers.Add("Authorization", authentication);
-      request.Content = content;
       HttpResponseMessage response = await m_client.SendAsync(request);
-      // Try and parse the new match json
-      Match.MatchResponse matchResponse = await TryReadResponse<Match.MatchResponse>(response);
+      // Try and parse the json
+      T scoreboardResponse = await TryReadResponse<T>(response);
       // Throw error if request is not successfull
       if (!response.IsSuccessStatusCode) {
-        throw (new ScoreboardLiveApiException(response.StatusCode, matchResponse));
+        throw (new ScoreboardLiveApiException(response.StatusCode, scoreboardResponse));
       }
-      // Return the tournaments
-      return matchResponse.Match;
+      // Return the response
+      return scoreboardResponse;
     }
 
     /// <summary>

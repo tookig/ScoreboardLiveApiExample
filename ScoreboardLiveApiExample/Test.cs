@@ -115,6 +115,7 @@ namespace ScoreboardLiveApiExample {
 
     static async Task<Match> CreateRandomMatch(Device device, Tournament tournament) {
       // Create a random match
+      Console.Clear();
       Console.WriteLine("Creating a random match and uploading to server...");
       Match match = RandomStuff.RandomMatch();
       // Send request
@@ -130,6 +131,43 @@ namespace ScoreboardLiveApiExample {
       Console.WriteLine(serverMatch);
       Console.WriteLine();
       return serverMatch;
+    }
+
+    static async Task<Court> SelectCourt(Device device) {
+      // Get courts from server
+      Console.Clear();
+      Console.WriteLine("Fetching all available courts from server...");
+      List<Court> courts = new List<Court>();
+      try {
+         courts.AddRange(await api.GetCourts(device));
+      }
+      catch (Exception e) {
+        Console.WriteLine(e.Message);
+        return null;
+      }
+      // List them for user to select
+      int i = 1;
+      foreach (Court court in courts) {
+        Console.WriteLine("{0}. {1} ({2})", i++, court.Name, court.Venue.Name);
+      }
+      // Get user input
+      Console.Write("Select a court: ");
+      int.TryParse(Console.ReadLine(), out int selection);
+      if ((selection < 1) || (selection > courts.Count)) {
+        return await SelectCourt(device);
+      }
+      return courts[selection - 1];
+    }
+
+    static async Task AssignMatchToCourt(Device device, Match match, Court court) {
+      Console.WriteLine();
+      Console.WriteLine("Assigning match {0} to court {1}", match.MatchID, court.Name);
+      try {
+        await api.AssignMatchToCourt(device, match, court);
+      }
+      catch (Exception e) {
+        Console.WriteLine(e.Message);
+      }
     }
 
     static void Main(string[] args) {
@@ -158,6 +196,22 @@ namespace ScoreboardLiveApiExample {
 
       // Create a random match
       Match match = CreateRandomMatch(deviceCredentials, selectedTournament).Result;
+      if (match == null) {
+        Console.ReadKey();
+        return;
+      }
+
+      // Get a list of all available courts for the user to select
+      Court court = SelectCourt(deviceCredentials).Result;
+      if (court == null) {
+        Console.ReadKey();
+        return;
+      }
+      Console.WriteLine("Selected court: {0}", court);
+
+      // Assign the new match to the selected court
+      AssignMatchToCourt(deviceCredentials, match, court).Wait();
+      Console.WriteLine("Done.");
 
       Console.ReadKey();
     }
