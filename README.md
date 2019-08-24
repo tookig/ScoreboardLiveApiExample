@@ -1,7 +1,11 @@
-# Scoreboard Live API Reference
-This is a short description of the Scoreboard Live API. It does not cover the entire API, but focuses on the parts that can be useful for tournament administrators.
+# Scoreboard Live API Test
+This is a very basic .NET console application to show examples of how to use the Scoreboard Live API. The solution is split into two projects.  The [ScoreboardApiLib](./ScoreboardApiLib) project contains a simple implementation of the most common operations and data objects used when registering and changing data on the server.
 
-# API basics
+The [ApiHelper class](./ScoreboardApiLib/ApiHelper.cs) contains a number of functions to register a device, test a device, add court, create a match etc.
+
+The [ScoreboardLiveApiExample](./ScoreboardLiveApiExample) project contains the user interactions and handles saving/loading keys.
+
+# Scoreboard Live API Reference
 The API is REST-based, but uses only GET or POST. The return body is in JSON format.
 
 ## Successfull API calls
@@ -26,7 +30,7 @@ If an API call fails, the HTTP status code for the return will be 400, 403, 404 
 ```
 
 # Authorization 
-Most of the API calls requires authorization. Scoreboard Live uses HMAC to authorize HTTP-requests. Each application, or device as they are called internally, must be registered with the Scoreboard Live server to be able to make API-calls that edit data on the server. When the device registers, it will receive an **activation code** (a six character string) and a **client token**. They are both required for authorization. See  [register_device](#register_device).
+Most of the API calls requires authorization. Scoreboard Live uses HMAC to authorize HTTP-requests. Each application, or device as they are called internally, must be registered with the Scoreboard Live server to be able to make API-calls that edit data on the server. When the device registers, it will receive an **activation code** (a six character string) and a **client token**. They are both required for authorization. See  [register_device](#register_device). The activation code and client token should be saved by the application, to avod having to re-register every time it is used.
 
 When an API request requires authorization, the **Authorization**-header must be set. The value should be a string with the first six characters being the **activation code**, and the following being a hex string representation of the HMAC code generated from the **body** of the request being sent, with the **client token** used as a HMAC key. Example of an **Authorization**-header:
 
@@ -64,11 +68,28 @@ Get all active tournaments for a unit, with the most recent first.
 * **Authorization**: HMAC
 * **Method**: POST
 * **Parameters**:
-   * (optional) **limit**: max number of tournaments to return.
+   * **limit** (optional): max number of tournaments to return.
 * **Returns:**
     ```javascript
     {
       tournaments: [...]
+    }
+    ```
+---
+
+## **get_courts**
+Get all courts for a unit.
+
+* **URL:** /api/court/get_courts
+* **Authorization**: HMAC
+* **Method**: GET or POST
+* **Parameters**:
+   * **addmatchinfo** (optional): append current match data to court object.
+   * **addvenueinfo** (optional): append venue data to court object.
+* **Returns:**
+    ```javascript
+    {
+      courts: [...] // Array with courts
     }
     ```
 ---
@@ -96,16 +117,64 @@ Register a device using an activation code. The activation code is generated fro
 ## **check_registration**
 This function is used to test if a stored client token is still valid on the server. This is useful to make sure no old keys are being used by the application. If a request to this function returns a **200** response, the key is still valid. If it returns a **403**, the key is no longer valid and should be disgarded. 
 
-**Important!** *Any other response means the server could not handle the request and the key validity cannot be determined from this!*
+**Important!** *Any other response than 200 or 403 means the server could not handle the request and the key validity cannot be determined from this!*
 
-* **URL:** /api/device/register_device
-* **Authorization**: none
+* **URL:** /api/device/check_registration
+* **Authorization**: HMAC
 * **Method**: POST
-* **Parameters**:
-   * **activationCode**: Code to use to register device.
+* **Parameters**: none
 * **Returns:**
     ```javascript
     {}
     ```
 ---
 
+## **create_onthefly_match**
+Creates an 'on-the-fly' match (a match that is not associated with any specific tournament class).
+
+* **URL:** /api/match/create_onthefly_match
+* **Authorization**: HMAC
+* **Method**: POST
+* **Parameters**:
+   * **tournamentid**: (optional) The ID of the tournament to add this match to. If not provided, the best suited currently running tournament will be used.
+   * **category**: (required) The match category. Must be one of the following: 
+     * **ms**: Men's singles
+     * **ws**: Women's singles
+     * **md**: Men's doubles
+     * **wd**: Women's doubles
+     * **xd**: Mixed doubles
+   * **description**: (optional) A short description of this match.
+   * **umpire**: (optional) Name of the umpire
+   * **servicejudge** (optional) Name of the service judge
+   * **sequencenumber** (optional) Match number
+   * **starttime** (optional) Start time on the format *YYYY-MM-DD HH:MM*. This parameter is optional, but recommended since this match will not show properly in the match list if not set.
+   * **team1player1name**: (optional) Player name of first player in first team
+   * **team1player1team**: (optional) Team name of first player in first team
+   * **team1player2name**: (optional) Player name of second player in first team
+   * **team1player2team**: (optional) Team name of second player in first team
+   * **team2player1name**: (optional) Player name of first player in second team
+   * **team2player1team**: (optional) Team name of first player in second team
+   * **team2player2name**: (optional) Player name of second player in second team
+   * **team2player2team**: (optional) Team name of second player in second team
+* **Returns:**
+    ```javascript
+    {
+      match: {} // New match object
+    }
+    ```
+---
+
+## **assign_match**
+Assign a match to a court.
+
+* **URL:** /api/court/assign_match
+* **Authorization**: HMAC
+* **Method**: POST
+* **Parameters**:
+   * **courtid** (required): The ID of the court to assign match to.
+   * **matchid** (required): The ID of the match to be assigned to a court.
+* **Returns:**
+    ```javascript
+    {}
+    ```
+---
