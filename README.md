@@ -30,7 +30,7 @@ If an API call fails, the HTTP status code for the return will be 400, 403, 404 
 ```
 
 # Authorization 
-Most of the API calls requires authorization. Scoreboard Live uses HMAC to authorize HTTP-requests. Each application, or device as they are called internally, must be registered with the Scoreboard Live server to be able to make API-calls that edit data on the server. When the device registers, it will receive an **activation code** (a six character string) and a **client token**. They are both required for authorization. See  [register_device](#register_device). The activation code and client token should be saved by the application, to avod having to re-register every time it is used.
+Most of the API calls requires authorization. Scoreboard Live uses HMAC to authorize HTTP-requests. Each application, or device as they are called here, must be registered with the Scoreboard Live server to be able to make API-calls that edit data on the server. When the device registers, it will receive an **activation code** (a six character string) and a **client token**. They are both required for authorization. See  [register_device](#register_device). The activation code and client token should be saved by the application, to avoid having to re-register every time it is used.
 
 When an API request requires authorization, the **Authorization**-header must be set. The value should be a string with the first six characters being the **activation code**, and the following being a hex string representation of the HMAC code generated from the **body** of the request being sent, with the **client token** used as a HMAC key. Example of an **Authorization**-header:
 
@@ -38,7 +38,7 @@ When an API request requires authorization, the **Authorization**-header must be
 Authorization: 94T0H86577ef386315bf7c967c40e49a1fb61e05c42dd96e1e2a30bcb78e72d41a4bb5
 ```
 
-Since the HMAC is generated using only the body of the HTTP-request, the body should always contain some random element; just to add some nonsense-named key with a random generated value.
+Since the HMAC is generated using only the body of the HTTP-request, the body should always contain some random element; just add some nonsense-named key with a random generated value.
 
 # API functions
 ## **get_units**
