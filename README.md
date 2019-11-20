@@ -18,7 +18,7 @@ When an API HTTP request returns as a success, the HTTP status code will always 
 ```
 
 ## Bad API calls
-If an API call fails, the HTTP status code for the return will be 400, 403, 404 or 500 depending on what happened. For 404 and 500, the return value will not be JSON, but a plain HTML standard server response. For the 400 and 403 responses, the return body will be in JSON format, with a description of the error. The 'success'-member is always set to 0, and the errors encountered is found in the 'errors'-array:
+If an API call fails, the HTTP status code for the return will be 400, 403, 404 or 500 depending on what happened. For 404 and 500, the return value will not be JSON, but a plain HTML standard server response. For the 400 and 403 responses, the return body will be in JSON format, with a description of the error. The 'success'-member is always set to 0, and the errors encountered are found in the 'errors'-array:
 ```javascript
 {
   success: 0,
@@ -115,7 +115,7 @@ Register a device using an activation code. The activation code is generated fro
 ---
 
 ## **check_registration**
-This function is used to test if a stored client token is still valid on the server. This is useful to make sure no old keys are being used by the application. If a request to this function returns a **200** response, the key is still valid. If it returns a **403**, the key is no longer valid and should be disgarded. 
+This function is used to test if a stored client token is still valid on the server. This is useful to make sure no old keys are being used by the application. If a request to this function returns a **200** response, the key is still valid. If it returns a **403**, the key is no longer valid and should be discarded. 
 
 **Important!** *Any other response than 200 or 403 means the server could not handle the request and the key validity cannot be determined from this!*
 
