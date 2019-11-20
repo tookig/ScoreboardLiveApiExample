@@ -5,7 +5,9 @@ using ScoreboardLiveApi;
 
 namespace ScoreboardLiveApiExample {
   class Test {
-    private static ApiHelper api = new ApiHelper("http://192.168.2.102/monkeyscore");
+    //private static ApiHelper api = new ApiHelper("https://www.scoreboardlive.se");
+    //private static ApiHelper api = new ApiHelper("https://tokig.ddns.net/sbdev");
+    private static ApiHelper api = new ApiHelper("http://192.168.2.103/monkeyscore");
     //private static ApiHelper api = new ApiHelper("http://192.168.43.253/monkeyscore/");
     private static readonly string keyStoreFile = string.Format("{0}scoreboardTestAppKeys.bin", AppDomain.CurrentDomain.BaseDirectory);
 
@@ -170,6 +172,27 @@ namespace ScoreboardLiveApiExample {
       }
     }
 
+    static async Task FindMatchOnServer(Device device, Tournament tournament, int tournamentMatchNumber) {
+      Console.WriteLine();
+      Console.WriteLine("Trying to find match with tournament match number {0} on server", tournamentMatchNumber);
+      List<Match> matches = new List<Match>();
+      try {
+        matches.AddRange(await api.FindMatchBySequenceNumber(device, tournament, tournamentMatchNumber));
+      }
+      catch (Exception e) {
+        Console.WriteLine(e.Message);
+      }
+      if (matches.Count > 0) {
+        Console.WriteLine("Found {0} match{1}:", matches.Count, matches.Count > 1 ? "es" : "");
+        foreach (Match i in matches) {
+          Console.WriteLine(i);
+        }
+      }
+      else {
+        Console.WriteLine("No match found");
+      }
+    }
+
     static void Main(string[] args) {
       // Select a unit
       Unit selectedUnit = SelectUnit().Result;
@@ -211,6 +234,11 @@ namespace ScoreboardLiveApiExample {
 
       // Assign the new match to the selected court
       AssignMatchToCourt(deviceCredentials, match, court).Wait();
+
+      // Check if we can retrieve the same match again
+      FindMatchOnServer(deviceCredentials, selectedTournament, match.TournamentMatchNumber).Wait();
+
+      Console.WriteLine();
       Console.WriteLine("Done.");
 
       Console.ReadKey();

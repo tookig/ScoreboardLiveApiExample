@@ -168,6 +168,23 @@ namespace ScoreboardLiveApi {
     }
 
     /// <summary>
+    /// Find match by sequence number.
+    /// </summary>
+    /// <returns></returns>
+    /// <param name="device">Device credentials</param>
+    /// <param name="tournament">Tournament to search match in</param>
+    /// <param name="tournamentMatchNumber">Tournament match number</param>
+    public async Task<List<Match>> FindMatchBySequenceNumber(Device device, Tournament tournament, int tournamentMatchNumber) {
+      // Create the post data.
+      Dictionary<string, string> formData = new Dictionary<string, string> {
+        { "tournamentid", tournament.TournamentID.ToString() },
+        { "sequencenumber", tournamentMatchNumber.ToString() }
+      };
+      Match.MatchesResponse response = await SendRequest<Match.MatchesResponse>("api/match/get_matches", device, formData);
+      return response.Matches;
+    }
+
+    /// <summary>
     /// Send a request to the scoreboard server
     /// </summary>
     /// <returns>Server response</returns>

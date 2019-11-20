@@ -14,6 +14,16 @@ namespace ScoreboardLiveApi {
       public Match Match { get; set; }
     }
 
+    [DataContract(Name = "matchesResponse")]
+    public class MatchesResponse : ScoreboardResponse {
+      [DataMember(Name = "matches")]
+      public List<Match> Matches { get; set; }
+
+      public MatchesResponse() {
+        Matches = new List<Match>();
+      }
+    }
+
     [DataMember(Name="matchid")]
     public int MatchID { get; set; }
 
