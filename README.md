@@ -186,8 +186,10 @@ Search for matches.
 * **Authorization**: None
 * **Method**: POST
 * **Parameters**:
-   * **tournamentid** (required): The ID of the tournament to find matches in.
-   * **sequencenumber** (required): The tournament match number to search for.
+   * **classid**: (optional): ID of class to get matches for. Cannot be used with other parameters.
+   * **matchid**: (optional): Get a specific match using its match id. Cannot be used with other parameters.
+   * **tournamentid** (optional): The ID of the tournament to find matches in. Use together with *sequencenumber*.
+   * **sequencenumber** (optional): The tournament match number to search for. Use together with *tournamentid*.
 * **Returns:**
     ```javascript
     {
