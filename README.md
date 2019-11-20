@@ -178,3 +178,20 @@ Assign a match to a court.
     {}
     ```
 ---
+
+## **get_matches**
+Search for matches.
+
+* **URL:** /api/match/get_matches
+* **Authorization**: None
+* **Method**: POST
+* **Parameters**:
+   * **tournamentid** (required): The ID of the tournament to find matches in.
+   * **sequencenumber** (required): The tournament match number to search for.
+* **Returns:**
+    ```javascript
+    {
+      match: {} // New match object
+    }
+    ```
+---
