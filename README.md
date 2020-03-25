@@ -5,6 +5,8 @@ The [ApiHelper class](./ScoreboardApiLib/ApiHelper.cs) contains a number of func
 
 The [ScoreboardLiveApiExample](./ScoreboardLiveApiExample) project contains the user interactions and handles saving/loading keys.
 
+*Note that the API is a work in progress and this is just an example of what can be done with it.* 
+
 # Scoreboard Live API Reference
 The API is REST-based, but uses only GET or POST. The return body is in JSON format.
 
