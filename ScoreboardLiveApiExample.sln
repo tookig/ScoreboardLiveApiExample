@@ -20,4 +20,9 @@ Global
 		{3E838BE3-FD18-4791-9E08-EE220B01DDC2}.Release|x86.ActiveCfg = Release|Any CPU
 		{3E838BE3-FD18-4791-9E08-EE220B01DDC2}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		Policies = $0
+		$0.DotNetNamingPolicy = $1
+		$1.DirectoryNamespaceAssociation = PrefixedHierarchical
+	EndGlobalSection
 EndGlobal

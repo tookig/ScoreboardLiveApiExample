@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 
 namespace ScoreboardLiveApi {
-  [DataContract(Name = "response")]
   public class ScoreboardResponse {
-    [DataMember(Name = "errors")]
+    [JsonPropertyName("errors")]
     public List<string> Errors { get; set; }
 
     public ScoreboardResponse() {

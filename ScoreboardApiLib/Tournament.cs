@@ -1,61 +1,59 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 using System.Text;
 
 namespace ScoreboardLiveApi {
-  [DataContract(Name = "tournament")]
   public class Tournament {
-    [DataContract(Name = "tournamentResponse")]
     public class TournamentResponse : ScoreboardResponse {
-      [DataMember(Name = "tournaments")]
+      [JsonPropertyName("tournaments")]
       public List<Tournament> Tournaments { get; set; }
       public TournamentResponse() {
         Tournaments = new List<Tournament>();
       }
     }
 
-    [DataMember(Name = "tournamentid")]
+    [JsonPropertyName("tournamentid"), JsonConverter(typeof(Converters.IntToString))]
     public int TournamentID { get; set; }
 
-    [DataMember(Name = "parenttournamentid")]
+    [JsonPropertyName("parenttournamentid"), JsonConverter(typeof(Converters.IntToString))]
     public int ParentTournamentID { get; set; }
 
-    [DataMember(Name = "name")]
+    [JsonPropertyName("name")]
     public string Name { get; set; }
 
-    [DataMember(Name = "type")]
+    [JsonPropertyName("type")]
     public string TournamentType { get; set; }
 
-    [DataMember(Name = "team1")]
+    [JsonPropertyName("team1")]
     public string Team1 { get; set; }
 
-    [DataMember(Name = "team2")]
+    [JsonPropertyName("team2")]
     public string Team2 { get; set; }
 
-    [DataMember(Name = "startdate")]
-    private string JsonStartDate { get; set; }
-    [IgnoreDataMember]
+    [JsonPropertyName("startdate")]
+    public string JsonStartDate { get; set; }
+    [JsonIgnore]
     public DateTime StartDate {
       get {
         return DateTime.ParseExact(JsonStartDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
       }
     }
 
-    [DataMember(Name = "enddate")]
-    private string JsonEndDate { get; set; }
-    [IgnoreDataMember]
+    [JsonPropertyName("enddate")]
+    public string JsonEndDate { get; set; }
+    [JsonIgnore]
     public DateTime EndDate {
       get {
         return DateTime.ParseExact(JsonEndDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
       }
     }
 
-    [DataMember(Name = "status")]
+    [JsonPropertyName("status")]
     public string Status { get; set; }
 
-    [DataMember(Name = "scoresystem")]
+    [JsonPropertyName("scoresystem")]
     public string ScoreSystem { get; set; }
 
     public override string ToString() {

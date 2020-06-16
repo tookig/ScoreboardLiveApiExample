@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Runtime.Serialization.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Security.Cryptography;
@@ -133,7 +134,7 @@ namespace ScoreboardLiveApi {
       if (tournament != null) {
         formData.Add("tournamentid", tournament.TournamentID.ToString());
       }
-      Match.MatchResponse matchResponse = await SendRequest<Match.MatchResponse>("api/match/create_onthefly_match", device, formData);
+      Match.MatchResponse matchResponse = await SendRequest<Match.MatchResponse>("api/match/create_match", device, formData);
       return matchResponse.Match;
     }
 
@@ -229,9 +230,12 @@ namespace ScoreboardLiveApi {
     /// <returns></returns>
     private static async Task<T> TryReadResponse<T>(HttpResponseMessage httpResponse) where T:ScoreboardResponse {
       T scoreboardResponse = null;
+      // Create default options
+      JsonSerializerOptions options = new JsonSerializerOptions {
+        IgnoreNullValues = true
+      };
       try {
-        var serializer = new DataContractJsonSerializer(typeof(T));
-        scoreboardResponse = serializer.ReadObject(await httpResponse.Content.ReadAsStreamAsync()) as T;
+        scoreboardResponse = await JsonSerializer.DeserializeAsync<T>(await httpResponse.Content.ReadAsStreamAsync(), options) as T;
       } catch (Exception e) {
         if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK) throw e;
       }

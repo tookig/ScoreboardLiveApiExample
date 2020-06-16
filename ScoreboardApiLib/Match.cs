@@ -1,22 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 using System.Text;
 
 namespace ScoreboardLiveApi {
-  [DataContract(Name="match")]
   public class Match {
-    
-    [DataContract(Name="matchResponse")]
     public class MatchResponse : ScoreboardResponse {
-      [DataMember(Name = "match")]
+      [JsonPropertyName("match")]
       public Match Match { get; set; }
     }
 
-    [DataContract(Name = "matchesResponse")]
     public class MatchesResponse : ScoreboardResponse {
-      [DataMember(Name = "matches")]
+      [JsonPropertyName("matches")]
       public List<Match> Matches { get; set; }
 
       public MatchesResponse() {
@@ -24,42 +20,42 @@ namespace ScoreboardLiveApi {
       }
     }
 
-    [DataMember(Name="matchid")]
+    [JsonPropertyName("matchid"), JsonConverter(typeof(Converters.IntToString))]
     public int MatchID { get; set; }
 
-    [DataMember(Name = "sequencenumber")]
+    [JsonPropertyName("sequencenumber"), JsonConverter(typeof(Converters.IntToString))]
     public int TournamentMatchNumber { get; set; }
 
-    [DataMember(Name="team1player1name")]
+    [JsonPropertyName("team1player1name")]
     public string Team1Player1Name { get; set; }
-    [DataMember(Name = "team1player1team")]
+    [JsonPropertyName("team1player1team")]
     public string Team1Player1Team { get; set; }
 
-    [DataMember(Name = "team1player2name")]
+    [JsonPropertyName("team1player2name")]
     public string Team1Player2Name { get; set; }
-    [DataMember(Name = "team1player2team")]
+    [JsonPropertyName("team1player2team")]
     public string Team1Player2Team { get; set; }
 
-    [DataMember(Name = "team2player1name")]
+    [JsonPropertyName("team2player1name")]
     public string Team2Player1Name { get; set; }
-    [DataMember(Name = "team2player1team")]
+    [JsonPropertyName("team2player1team")]
     public string Team2Player1Team { get; set; }
 
-    [DataMember(Name = "team2player2name")]
+    [JsonPropertyName("team2player2name")]
     public string Team2Player2Name { get; set; }
-    [DataMember(Name = "team2player2team")]
+    [JsonPropertyName("team2player2team")]
     public string Team2Player2Team { get; set; }
 
-    [DataMember(Name = "status")]
+    [JsonPropertyName("status")]
     public string Status { get; set; }
 
-    [DataMember(Name = "category")]
+    [JsonPropertyName("category")]
     public string Category { get; set; }
 
-    [DataMember(Name = "starttime")]
-    private string JsonStartTime { get; set; }
+    [JsonPropertyName("starttime")]
+    public string JsonStartTime { get; set; }
 
-    [IgnoreDataMember]
+    [JsonIgnore]
     public DateTime StartTime {
       get {
         return DateTime.ParseExact(JsonStartTime, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);

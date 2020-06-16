@@ -7,6 +7,8 @@ The [ScoreboardLiveApiExample](./ScoreboardLiveApiExample) project contains the 
 
 *Note that the API is a work in progress and this is just an example of what can be done with it.* 
 
+For a list of changes check the [Changelog](#Changelog) at the end of this file.
+
 # Scoreboard Live API Reference
 The API is REST-based, but uses only GET or POST. The return body is in JSON format.
 
@@ -199,3 +201,8 @@ Search for matches.
     }
     ```
 ---
+
+# Changelog
+#### 2020-06-16
+* Now using *System.Text.Json* instead of *Newtonsoft.Json* for response parsing.
+* API method *api/match/create_onthefly_match* renamed *api/match/create_match*
