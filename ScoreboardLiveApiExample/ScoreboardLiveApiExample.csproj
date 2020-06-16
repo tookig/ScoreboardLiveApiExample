@@ -89,7 +89,6 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
-    <None Include="EmptyTextFile.txt" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ScoreboardApiLib\ScoreboardLiveApi.csproj">
