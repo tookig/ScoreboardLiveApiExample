@@ -272,10 +272,24 @@ namespace ScoreboardLiveApi {
     /// <param name="device"></param>
     /// <param name="content"></param>
     /// <returns></returns>
-    private static async Task<string> CalculateHMAC(Device device, HttpContent content) {
+    public static async Task<string> CalculateHMAC(Device device, HttpContent content) {
       string hash;
       using (HMACSHA256 hmac = new HMACSHA256(Encoding.ASCII.GetBytes(device.ClientToken))) {
         hash = device.DeviceCode + ByteArrayToHexString(hmac.ComputeHash(await content.ReadAsByteArrayAsync()));
+      }
+      return hash;
+    }
+
+    /// <summary>
+    /// Create a HMAC signature for a string, using device credentials.
+    /// </summary>
+    /// <param name="device"></param>
+    /// <param name="content"></param>
+    /// <returns></returns>
+    public static string CalculateHMAC(Device device, string content) {
+      string hash;
+      using (HMACSHA256 hmac = new HMACSHA256(Encoding.ASCII.GetBytes(device.ClientToken))) {
+        hash = device.DeviceCode + ByteArrayToHexString(hmac.ComputeHash(Encoding.UTF8.GetBytes(content)));
       }
       return hash;
     }
