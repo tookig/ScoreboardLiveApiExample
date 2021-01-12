@@ -5,10 +5,7 @@ using ScoreboardLiveApi;
 
 namespace ScoreboardLiveApiExample {
   class Test {
-    //private static ApiHelper api = new ApiHelper("https://www.scoreboardlive.se");
-    //private static ApiHelper api = new ApiHelper("https://tokig.ddns.net/sbdev");
-    private static ApiHelper api = new ApiHelper("http://192.168.2.103/monkeyscore");
-    //private static ApiHelper api = new ApiHelper("http://192.168.43.253/monkeyscore/");
+    private static ApiHelper api = new ApiHelper("https://dosan.scoreboardlive.se");
     private static readonly string keyStoreFile = string.Format("{0}scoreboardTestAppKeys.bin", AppDomain.CurrentDomain.BaseDirectory);
 
     static async Task<Unit> SelectUnit() {

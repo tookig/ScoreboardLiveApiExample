@@ -1,13 +1,12 @@
 using System;
-using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 
 namespace ScoreboardLiveApi {
-  [DataContract(Name="venue")]
   public class Venue {
-    [DataMember(Name="venueid")]
+    [JsonPropertyName("venueid"), JsonConverter(typeof(Converters.IntToString))]
     public int VenueID { get; set; }
 
-    [DataMember(Name="name")]
+    [JsonPropertyName("name")]
     public string Name { get; set; }
 
     public override string ToString() {

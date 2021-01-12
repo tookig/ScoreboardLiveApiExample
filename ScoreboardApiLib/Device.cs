@@ -1,37 +1,35 @@
 ﻿using System;
 using System.Globalization;
-using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 
 namespace ScoreboardLiveApi {
   [Serializable]
-  [DataContract(Name = "device")]
-  public class Device {
-    [DataContract(Name = "deviceResponse")]
+public class Device {
     public class DeviceResponse : ScoreboardResponse {
-      [DataMember(Name = "device")]
+      [JsonPropertyName("device")]
       public Device Device { get; set; }
     }
 
-    [DataMember(Name = "activationCode")]
+    [JsonPropertyName("activationCode")]
     public string DeviceCode { get; set; }
 
-    [DataMember(Name = "expiresAt")]
+    [JsonPropertyName("expiresAt")]
     private string JsonExpires { get; set; }
 
-    [IgnoreDataMember]
+    [JsonIgnore]
     public DateTime Expires {
       get {
         return DateTime.ParseExact(JsonExpires, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
       }
     }
 
-    [DataMember(Name = "clientToken")]
+    [JsonPropertyName("clientToken")]
     public string ClientToken { get; set; }
 
-    [DataMember(Name = "serverToken")]
+    [JsonPropertyName("serverToken")]
     public string ServerToken { get; set; }
 
-    [DataMember(Name = "unit")]
+    [JsonPropertyName("unit"), JsonConverter(typeof(Converters.IntToString))]
     public int UnitID { get; set; }
 
     public Device() {

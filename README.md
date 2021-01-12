@@ -7,6 +7,8 @@ The [ScoreboardLiveApiExample](./ScoreboardLiveApiExample) project contains the 
 
 *Note that the API is a work in progress and this is just an example of what can be done with it.* 
 
+For a list of changes check the [Changelog](#Changelog) at the end of this file.
+
 # Scoreboard Live API Reference
 The API is REST-based, but uses only GET or POST. The return body is in JSON format.
 
@@ -131,10 +133,10 @@ This function is used to test if a stored client token is still valid on the ser
     ```
 ---
 
-## **create_onthefly_match**
+## **create_match**
 Creates an 'on-the-fly' match (a match that is not associated with any specific tournament class).
 
-* **URL:** /api/match/create_onthefly_match
+* **URL:** /api/match/create_match
 * **Authorization**: HMAC
 * **Method**: POST
 * **Parameters**:
@@ -199,3 +201,8 @@ Search for matches.
     }
     ```
 ---
+
+# Changelog
+#### 2020-06-16
+* Now using *System.Text.Json* instead of *Newtonsoft.Json* for response parsing.
+* API method *api/match/create_onthefly_match* renamed *api/match/create_match*

@@ -1,14 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 
 namespace ScoreboardLiveApi {
-  [DataContract(Name="court")]
-  public class Court {
-    
-    [DataContract(Name="courtResponse")]
-    public class CourtResponse : ScoreboardResponse {
-      [DataMember(Name = "courts")]
+public class Court {
+public class CourtResponse : ScoreboardResponse {
+      [JsonPropertyName("courts")]
       public List<Court> Courts { get; set; }
 
       public CourtResponse() {
@@ -16,16 +13,16 @@ namespace ScoreboardLiveApi {
       }
     }
 
-    [DataMember(Name="courtid")]
+    [JsonPropertyName("courtid"), JsonConverter(typeof(Converters.IntToString))]
     public int CourtID { get; set; }
 
-    [DataMember(Name = "gameid")]
+    [JsonPropertyName("matchid"), JsonConverter(typeof(Converters.IntToString))]
     public int MatchID { get; set; }
 
-    [DataMember(Name="name")]
+    [JsonPropertyName("name")]
     public string Name { get; set; }
 
-    [DataMember(Name = "venue")]
+    [JsonPropertyName("venue")]
     public Venue Venue { get; set; }
 
     public override string ToString() {
