@@ -133,10 +133,10 @@ This function is used to test if a stored client token is still valid on the ser
     ```
 ---
 
-## **create_onthefly_match**
+## **create_match**
 Creates an 'on-the-fly' match (a match that is not associated with any specific tournament class).
 
-* **URL:** /api/match/create_onthefly_match
+* **URL:** /api/match/create_match
 * **Authorization**: HMAC
 * **Method**: POST
 * **Parameters**:

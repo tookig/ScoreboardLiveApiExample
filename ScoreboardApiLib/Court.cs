@@ -16,7 +16,7 @@ public class CourtResponse : ScoreboardResponse {
     [JsonPropertyName("courtid"), JsonConverter(typeof(Converters.IntToString))]
     public int CourtID { get; set; }
 
-    [JsonPropertyName("gameid"), JsonConverter(typeof(Converters.IntToString))]
+    [JsonPropertyName("matchid"), JsonConverter(typeof(Converters.IntToString))]
     public int MatchID { get; set; }
 
     [JsonPropertyName("name")]
