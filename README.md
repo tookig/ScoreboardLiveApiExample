@@ -82,12 +82,22 @@ Get all active tournaments for a unit, with the most recent first.
 ---
 
 ## **get_courts**
-Get all courts for a unit.
+Get court information for a unit, a tournament, a specific court or a selection of courts.
+
+Depending on the parameters, the selection of courts returned varies:
+- To get all courts registered on a unit, use an HMAC header, or supply a **unitid** parameter.
+- To get all courts assigned to a tournament, use the **tournamentid** parameter.
+- To get information on one or many specific courts, use the **courtid** parameter.
+
+It is not possible to combine parameters. If using the **tournamentid** or **courtid** parameters, request should be without HMAC header.
 
 * **URL:** /api/court/get_courts
-* **Authorization**: HMAC
+* **Authorization**: none/HMAC
 * **Method**: GET or POST
 * **Parameters**:
+   * **unitid**       (optional): get all courts for the specified unit.
+   * **tournamentid** (optional): get all courts for the specified tournament.
+   * **courtid**      (optional): get court info for the specified court. This can also be an array, to get info on multiple courts.
    * **addmatchinfo** (optional): append current match data to court object.
    * **addvenueinfo** (optional): append venue data to court object.
 * **Returns:**
