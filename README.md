@@ -81,6 +81,23 @@ Get all active tournaments for a unit, with the most recent first.
     ```
 ---
 
+## **get_tournament**
+Get information on a specific tournament.
+
+* **URL:** /api/tournament/get_tournament
+* **Authorization**: none
+* **Method**: POST
+* **Parameters**:
+   * **tournamentid**: ID of tournament to get data for.
+* **Returns:**
+    ```javascript
+    {
+      tournament: [...]
+    }
+    ```
+
+---
+
 ## **get_courts**
 Get court information for a unit, a tournament, a specific court or a selection of courts.
 
