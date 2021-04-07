@@ -86,7 +86,7 @@ Get information on a specific tournament.
 
 * **URL:** /api/tournament/get_tournament
 * **Authorization**: none
-* **Method**: POST
+* **Method**: GET or POST
 * **Parameters**:
    * **tournamentid**: ID of tournament to get data for.
 * **Returns:**
