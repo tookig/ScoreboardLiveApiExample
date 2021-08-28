@@ -26,6 +26,9 @@ namespace ScoreboardLiveApi {
     [JsonPropertyName("sequencenumber"), JsonConverter(typeof(Converters.IntToString))]
     public int TournamentMatchNumber { get; set; }
 
+    [JsonPropertyName("place"), JsonConverter(typeof(Converters.IntToString))]
+    public int Place { get; set; }
+
     [JsonPropertyName("team1player1name")]
     public string Team1Player1Name { get; set; }
     [JsonPropertyName("team1player1team")]

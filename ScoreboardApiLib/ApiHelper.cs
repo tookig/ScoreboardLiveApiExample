@@ -24,12 +24,14 @@ namespace ScoreboardLiveApi {
     /// Initializes a new instance of the <see cref="T:ScoreboardLiveApi.Api.ApiHelper"/> class.
     /// </summary>
     /// <param name="baseUrl">Base URL for the Scoreboard Live server.</param>
-    public ApiHelper(string baseUrl) {
+    public ApiHelper(string baseUrl, int requestTimeout = 30) {
       BaseUrl = baseUrl;
       // Set the default headers to be used for all requests
       m_client.DefaultRequestHeaders.Accept.Clear();
       m_client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
       m_client.DefaultRequestHeaders.Add("User-Agent", "Scoreboard Live API Tester");
+      // Set timeout
+      m_client.Timeout = TimeSpan.FromSeconds(requestTimeout);
     }
 
     /// <summary>
