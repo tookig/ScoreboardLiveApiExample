@@ -76,6 +76,15 @@ namespace ScoreboardLiveApi {
       { "xd", "Mixed doubles" }
     };
 
+    public (string, string) GetPlayerAtIndex(int i) {
+      if ((i < 0) || (i > 3)) throw new ArgumentOutOfRangeException("i", "Player index must be in range 0..3");
+      int t = (i / 2) + 1;
+      int p = (i % 2) + 1;
+      string name = this.GetType().GetProperty(string.Format("Team{0}Player{1}Name", t, p)).GetValue(this, null) as string;
+      string team = this.GetType().GetProperty(string.Format("Team{0}Player{1}Team", t, p)).GetValue(this, null) as string;
+      return (name, team);
+    }
+
     public override string ToString() {
       StringBuilder sb = new StringBuilder();
       sb.AppendFormat("{0} {1} {2}{3}",

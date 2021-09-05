@@ -5,7 +5,12 @@ using System.Text.Json.Serialization;
 namespace ScoreboardLiveApi {
   [Serializable]
   public class TournamentClass {
-    [JsonPropertyName("classid")]
+    public class TournamentClassResponse : ScoreboardResponse {
+      [JsonPropertyName("class")]
+      public TournamentClass TournamentClass { get; set; }
+    }
+
+    [JsonPropertyName("classid"), JsonConverter(typeof(Converters.IntToString))]
     public int ID { get; set; }
 
     [JsonPropertyName("category")]
@@ -14,13 +19,13 @@ namespace ScoreboardLiveApi {
     [JsonPropertyName("description")]
     public string Description { get; set; }
 
-    [JsonPropertyName("tournament")]
+    [JsonPropertyName("tournament"), JsonConverter(typeof(Converters.IntToString))]
     public int TournamentID { get; set; }
 
-    [JsonPropertyName("parentclass")]
+    [JsonPropertyName("parentclass"), JsonConverter(typeof(Converters.IntToString))]
     public int ParentClassID { get; set; }
 
-    [JsonPropertyName("size")]
+    [JsonPropertyName("size"), JsonConverter(typeof(Converters.IntToString))]
     public int Size { get; set; }
 
     [JsonPropertyName("type")]
