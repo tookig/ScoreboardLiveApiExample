@@ -201,6 +201,22 @@ namespace ScoreboardLiveApi {
     }
 
     /// <summary>
+    /// Clear a court from any assigned match.
+    /// </summary>
+    /// <returns></returns>
+    /// <param name="device">Device credentials</param>
+    /// <param name="court">Court to clear</param>
+    public async Task ClearCourt(Device device, Court court)
+    {
+      // Create the post data.
+      Dictionary<string, string> formData = new Dictionary<string, string> {
+        { "courtid", court.CourtID.ToString() },
+        { "matchid", "0" }
+      };
+      ScoreboardResponse response = await SendRequest<ScoreboardResponse>("api/court/assign_match", device, formData);
+    }
+
+    /// <summary>
     /// Find match by sequence number.
     /// </summary>
     /// <returns></returns>
