@@ -12,7 +12,7 @@ using System.Linq;
 namespace ScoreboardLiveApi {
   public class ApiHelper {
     // The client object to make all server requests
-    private readonly HttpClient m_client  = new HttpClient();
+    private readonly HttpClient m_client = new HttpClient();
 
     /// <summary>
     /// Gets or sets the base URL for the Scoreboard Live server (ex: http://www.scoreboardlive.se).
@@ -29,7 +29,7 @@ namespace ScoreboardLiveApi {
       // Set the default headers to be used for all requests
       m_client.DefaultRequestHeaders.Accept.Clear();
       m_client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-      m_client.DefaultRequestHeaders.Add("User-Agent", "Scoreboard Live API Tester");
+      m_client.DefaultRequestHeaders.Add("User-Agent", "Scoreboard Live API Helper");
       // Set timeout
       m_client.Timeout = TimeSpan.FromSeconds(requestTimeout);
     }
@@ -111,14 +111,30 @@ namespace ScoreboardLiveApi {
     }
 
     /// <summary>
-    /// Create a on-the-fly match.
+    /// Get a specific tournament
+    /// </summary>
+    /// <param name="tournamentID">ID of tournament to get</param>
+    /// <returns>Tournament if found.</returns>
+    public async Task<Tournament> GetTournament(int tournamentID) {
+      // Create the post data. 
+      Dictionary<string, string> formData = new Dictionary<string, string> {
+        { "tournamentid", tournamentID.ToString() }
+      };
+      Tournament.SingleTournamentResponse tournamentResponse = await SendRequest<Tournament.SingleTournamentResponse>("api/tournament/get_tournament", null, formData);
+      return tournamentResponse.Tournament;
+    }
+
+    /// <summary>
+    /// Create a match.
     /// </summary>
     /// <returns>The newly created match</returns>
     /// <param name="device">Device with server credentials</param>
     /// <param name="tournament">The tournament to add the match to. Can be null, in that case the server will
     ///                          try to figure out which tournament to use.</param>
+    /// <param name="tClass">If this match is to belong to a round-robin tournament class, add class data here. 
+    ///                      Set as null otherwise</param>
     /// <param name="match">The match to add</param>
-    public async Task<Match> CreateOnTheFlyMatch(Device device, Tournament tournament, Match match) {
+    public async Task<Match> CreateMatch(Device device, Tournament tournament, TournamentClass tClass, Match match) {
       // Create the post data
       Dictionary<string, string> formData = new Dictionary<string, string> {
         { "category", match.Category },
@@ -136,10 +152,25 @@ namespace ScoreboardLiveApi {
       if (tournament != null) {
         formData.Add("tournamentid", tournament.TournamentID.ToString());
       }
+      if (tClass != null) {
+        formData.Add("classid", tClass.ID.ToString());
+      }
       Match.MatchResponse matchResponse = await SendRequest<Match.MatchResponse>("api/match/create_match", device, formData);
       return matchResponse.Match;
     }
-    
+
+    /// <summary>
+    /// Create a match.
+    /// </summary>
+    /// <returns>The newly created match</returns>
+    /// <param name="device">Device with server credentials</param>
+    /// <param name="tournament">The tournament to add the match to. Can be null, in that case the server will
+    ///                          try to figure out which tournament to use.</param>
+    /// <param name="match">The match to add</param>
+    public async Task<Match> CreateOnTheFlyMatch(Device device, Tournament tournament, Match match) {
+      return await CreateMatch(device, tournament, null, match);
+    }
+
     /// <summary>
     /// Update an existing match on the server
     /// </summary>
@@ -167,6 +198,40 @@ namespace ScoreboardLiveApi {
         string attachAction = string.IsNullOrEmpty(name) ? "detach_player" : "attach_player";
         matchResponse = await SendRequest<Match.MatchResponse>("api/player/" + attachAction, device, playerData);
       }
+      return matchResponse.Match;
+    }
+
+    /// <summary>
+    /// Upload the scores for a match to the server
+    /// </summary>
+    /// <param name="device">Device with server credentials</param>
+    /// <param name="match">Match to set scores for.</param>
+    public async Task<Match> SetScore(Device device, MatchExtended match) {
+      // Create POST-data
+      Dictionary<string, string> formData = new Dictionary<string, string> {
+        { "matchid", match.MatchID.ToString() },
+        { "team1set1", match.Team1Set1.ToString() },
+        { "team1set2", match.Team1Set2.ToString() },
+        { "team1set3", match.Team1Set3.ToString() },
+        { "team1set4", match.Team1Set4.ToString() },
+        { "team1set5", match.Team1Set5.ToString() },
+        { "team2set1", match.Team2Set1.ToString() },
+        { "team2set2", match.Team2Set2.ToString() },
+        { "team2set3", match.Team2Set3.ToString() },
+        { "team2set4", match.Team2Set4.ToString() },
+        { "team2set5", match.Team2Set5.ToString() }
+      };
+      // Add any specials (w/o etc.)
+      if (!String.IsNullOrEmpty(match.Special) && (match.Special != "none")) {
+        if (match.Status == "team1won") {
+          formData.Add("team2special", match.Special);
+        }
+        if (match.Status == "team2won") {
+          formData.Add("team1special", match.Special);
+        }
+      }
+      // Set score
+      Match.MatchResponse matchResponse = await SendRequest<Match.MatchResponse>("api/match/set_score", device, formData);
       return matchResponse.Match;
     }
 
@@ -201,13 +266,12 @@ namespace ScoreboardLiveApi {
     }
 
     /// <summary>
-    /// Clear a court from any assigned match.
+    /// Clear a court (remove any assigned match)
     /// </summary>
     /// <returns></returns>
     /// <param name="device">Device credentials</param>
-    /// <param name="court">Court to clear</param>
-    public async Task ClearCourt(Device device, Court court)
-    {
+    /// <param name="court">Court to be cleared</param>
+    public async Task ClearCourt(Device device, Court court) {
       // Create the post data.
       Dictionary<string, string> formData = new Dictionary<string, string> {
         { "courtid", court.CourtID.ToString() },
@@ -313,7 +377,7 @@ namespace ScoreboardLiveApi {
     /// <typeparam name="T">ScoreboardResponse type</typeparam>
     /// <param name="httpResponse">The http request response to try and parse</param>
     /// <returns></returns>
-    private static async Task<T> TryReadResponse<T>(HttpResponseMessage httpResponse) where T:ScoreboardResponse {
+    private static async Task<T> TryReadResponse<T>(HttpResponseMessage httpResponse) where T : ScoreboardResponse {
       T scoreboardResponse = null;
       // Create default options
       JsonSerializerOptions options = new JsonSerializerOptions {

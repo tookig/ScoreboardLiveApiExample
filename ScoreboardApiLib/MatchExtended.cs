@@ -56,6 +56,9 @@ namespace ScoreboardLiveApi {
     [JsonPropertyName("serversequence")]
     public int ServerSequence { get; set; }
 
+    [JsonPropertyName("special")]
+    public string Special { get; set; }
+
     public override string ToString() {
       StringBuilder sb = new StringBuilder();
       sb.Append(base.ToString());

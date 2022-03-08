@@ -14,6 +14,11 @@ namespace ScoreboardLiveApi {
       }
     }
 
+    public class SingleTournamentResponse : ScoreboardResponse {
+      [JsonPropertyName("tournament")]
+      public Tournament Tournament { get; set; }
+    }
+
     [JsonPropertyName("tournamentid"), JsonConverter(typeof(Converters.IntToString))]
     public int TournamentID { get; set; }
 
