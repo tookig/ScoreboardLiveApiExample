@@ -221,6 +221,7 @@ Search for matches.
    * **matchid**: (optional): Get a specific match using its match id. Cannot be used with other parameters.
    * **tournamentid** (optional): The ID of the tournament to find matches in. Use together with *sequencenumber*.
    * **sequencenumber** (optional): The tournament match number to search for. Use together with *tournamentid*.
+   * **tag** (optional): The match tag to search for. Must be a 64 character string.
 * **Returns:**
     ```javascript
     {
@@ -230,6 +231,10 @@ Search for matches.
 ---
 
 # Changelog
+
+#### 2022-10-14
+* Add tag to match objects. The tag must be a 64 character string to identify the match.
+
 #### 2020-06-16
 * Now using *System.Text.Json* instead of *Newtonsoft.Json* for response parsing.
 * API method *api/match/create_onthefly_match* renamed *api/match/create_match*

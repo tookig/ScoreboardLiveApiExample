@@ -169,7 +169,7 @@ namespace ScoreboardLiveApiExample {
       }
     }
 
-    static async Task FindMatchOnServer(Device device, Tournament tournament, int tournamentMatchNumber) {
+    static async Task FindMatchOnServerUsingMatchnumber(Device device, Tournament tournament, int tournamentMatchNumber) {
       Console.WriteLine();
       Console.WriteLine("Trying to find match with tournament match number {0} on server", tournamentMatchNumber);
       List<Match> matches = new List<Match>();
@@ -186,6 +186,26 @@ namespace ScoreboardLiveApiExample {
         }
       }
       else {
+        Console.WriteLine("No match found");
+      }
+    }
+
+    static async Task FindMatchOnServerUsingTag(Device device, string tag) {
+      Console.WriteLine();
+      Console.WriteLine("Trying to find match with tag hash: {0}", tag);
+      List<Match> matches = new List<Match>();
+      try {
+        matches.AddRange(await api.FindMatchByTag(device, tag));
+      } catch (Exception e) {
+        Console.WriteLine(e.Message);
+      }
+      if (matches.Count > 0) {
+        Console.WriteLine("Found {0} match{1}:", matches.Count, matches.Count > 1 ? "es" : "");
+        foreach (Match i in matches) {
+          Console.WriteLine(i);
+          Console.WriteLine("Match tag: {0}", i.Tag);
+        }
+      } else {
         Console.WriteLine("No match found");
       }
     }
@@ -220,6 +240,7 @@ namespace ScoreboardLiveApiExample {
         Console.ReadKey();
         return;
       }
+      Console.WriteLine("Created a match with hash {0}", ApiHelper.HashMatch(match));
 
       // Get a list of all available courts for the user to select
       Court court = SelectCourt(deviceCredentials).Result;
@@ -232,8 +253,9 @@ namespace ScoreboardLiveApiExample {
       // Assign the new match to the selected court
       AssignMatchToCourt(deviceCredentials, match, court).Wait();
 
-      // Check if we can retrieve the same match again
-      FindMatchOnServer(deviceCredentials, selectedTournament, match.TournamentMatchNumber).Wait();
+      // Check if we can retrieve the same match again using the two methods
+      FindMatchOnServerUsingMatchnumber(deviceCredentials, selectedTournament, match.TournamentMatchNumber).Wait();
+      FindMatchOnServerUsingTag(deviceCredentials, ApiHelper.HashMatch(match)).Wait();
 
       Console.WriteLine();
       Console.WriteLine("Done.");

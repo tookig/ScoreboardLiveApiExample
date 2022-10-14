@@ -15,7 +15,7 @@ namespace ScoreboardLiveApi {
     private readonly HttpClient m_client = new HttpClient();
 
     /// <summary>
-    /// Gets or sets the base URL for the Scoreboard Live server (ex: http://www.scoreboardlive.se).
+    /// Gets or sets the base URL for the Scoreboard Live server (ex: https://www.scoreboardlive.se).
     /// </summary>
     /// <value>The base URL.</value>
     public string BaseUrl { get; set; }
@@ -139,6 +139,7 @@ namespace ScoreboardLiveApi {
       Dictionary<string, string> formData = new Dictionary<string, string> {
         { "category", match.Category },
         { "sequencenumber", match.TournamentMatchNumber.ToString() },
+        { "tag", HashMatch(match) },
         { "starttime", match.StartTime.ToString("yyyy-MM-dd HH:mm") },
         { "team1player1name", match.Team1Player1Name },
         { "team1player1team", match.Team1Player1Team },
@@ -298,6 +299,21 @@ namespace ScoreboardLiveApi {
     }
 
     /// <summary>
+    /// Find match by its tag.
+    /// </summary>
+    /// <param name="device">Device credentials</param>
+    /// <param name="tag">Tag to search for. Should be a 64 character string.</param>
+    /// <returns>A list with matches with the supplied tag.</returns>
+    public async Task<List<Match>> FindMatchByTag(Device device, string tag) {
+      // Create the post data
+      Dictionary<string, string> formData = new Dictionary<string, string> {
+        { "tag", tag }
+      };
+      Match.MatchesResponse response = await SendRequest<Match.MatchesResponse>("api/match/get_matches", device, formData);
+      return response.Matches;
+    }
+
+    /// <summary>
     /// Get all matches for a specific tournament class
     /// </summary>
     /// <param name="device">Device credentials</param>
@@ -439,6 +455,26 @@ namespace ScoreboardLiveApi {
       string hash;
       using (HMACSHA256 hmac = new HMACSHA256(Encoding.ASCII.GetBytes(device.ClientToken))) {
         hash = device.DeviceCode + ByteArrayToHexString(hmac.ComputeHash(Encoding.UTF8.GetBytes(content)));
+      }
+      return hash;
+    }
+
+    /// <summary>
+    /// Create a hash unique for match with specific players and tournament match number.
+    /// </summary>
+    /// <param name="match">Match to hash.</param>
+    /// <returns>Hash of match names and tournament match number.</returns>
+    public static string HashMatch(Match match) {
+      // Create the string to hash
+      string source = string.Concat(new string []  {
+        match.Team1Player1Name, match.Team1Player1Team, match.Team1Player2Name, match.Team1Player2Team,
+        match.Team2Player1Name, match.Team2Player1Team, match.Team2Player2Name, match.Team2Player2Team,
+        match.TournamentMatchNumber.ToString()
+      });
+      // Hash the match string and return
+      string hash;
+      using (SHA256 sha = SHA256.Create()) {
+        hash = ByteArrayToHexString(sha.ComputeHash(Encoding.UTF8.GetBytes(source)));
       }
       return hash;
     }

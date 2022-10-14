@@ -58,6 +58,9 @@ namespace ScoreboardLiveApi {
     [JsonPropertyName("starttime")]
     public string JsonStartTime { get; set; }
 
+    [JsonPropertyName("tag")]
+    public string Tag { get; set; }
+
     [JsonIgnore]
     public DateTime StartTime {
       get {
