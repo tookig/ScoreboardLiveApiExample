@@ -178,6 +178,7 @@ Creates an 'on-the-fly' match (a match that is not associated with any specific 
    * **umpire**: (optional) Name of the umpire
    * **servicejudge** (optional) Name of the service judge
    * **sequencenumber** (optional) Match number
+   * **tag** (optional) A 64 character tag (pref. a hash) to help identify this match in some context (decided by whoever creates the match).
    * **starttime** (optional) Start time on the format *YYYY-MM-DD HH:MM*. This parameter is optional, but recommended since this match will not show properly in the match list if not set.
    * **team1player1name**: (optional) Player name of first player in first team
    * **team1player1team**: (optional) Team name of first player in first team
