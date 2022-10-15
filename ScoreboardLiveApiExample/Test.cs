@@ -2,6 +2,8 @@
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using ScoreboardLiveApi;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace ScoreboardLiveApiExample {
   class Test {
@@ -117,6 +119,7 @@ namespace ScoreboardLiveApiExample {
       Console.Clear();
       Console.WriteLine("Creating a random match and uploading to server...");
       Match match = RandomStuff.RandomMatch();
+      match.Tag = HashMatch(match);
       // Send request
       Match serverMatch = null;
       try {
@@ -210,6 +213,21 @@ namespace ScoreboardLiveApiExample {
       }
     }
 
+    public static string HashMatch(Match match) {
+      // Create the string to hash
+      string source = string.Concat(new string[]  {
+        match.Team1Player1Name, match.Team1Player1Team, match.Team1Player2Name, match.Team1Player2Team,
+        match.Team2Player1Name, match.Team2Player1Team, match.Team2Player2Name, match.Team2Player2Team,
+        match.TournamentMatchNumber.ToString()
+      });
+      // Hash the match string and return
+      string hash;
+      using (SHA256 sha = SHA256.Create()) {
+        hash = ApiHelper.ByteArrayToHexString(sha.ComputeHash(Encoding.UTF8.GetBytes(source)));
+      }
+      return hash;
+    }
+
     static void Main(string[] args) {
       // Select a unit
       Unit selectedUnit = SelectUnit().Result;
@@ -240,7 +258,7 @@ namespace ScoreboardLiveApiExample {
         Console.ReadKey();
         return;
       }
-      Console.WriteLine("Created a match with hash {0}", ApiHelper.HashMatch(match));
+      Console.WriteLine("Created a match with hash {0}", HashMatch(match));
 
       // Get a list of all available courts for the user to select
       Court court = SelectCourt(deviceCredentials).Result;
@@ -255,7 +273,7 @@ namespace ScoreboardLiveApiExample {
 
       // Check if we can retrieve the same match again using the two methods
       FindMatchOnServerUsingMatchnumber(deviceCredentials, selectedTournament, match.TournamentMatchNumber).Wait();
-      FindMatchOnServerUsingTag(deviceCredentials, ApiHelper.HashMatch(match)).Wait();
+      FindMatchOnServerUsingTag(deviceCredentials, HashMatch(match)).Wait();
 
       Console.WriteLine();
       Console.WriteLine("Done.");

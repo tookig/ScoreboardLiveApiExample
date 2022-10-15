@@ -139,7 +139,6 @@ namespace ScoreboardLiveApi {
       Dictionary<string, string> formData = new Dictionary<string, string> {
         { "category", match.Category },
         { "sequencenumber", match.TournamentMatchNumber.ToString() },
-        { "tag", HashMatch(match) },
         { "starttime", match.StartTime.ToString("yyyy-MM-dd HH:mm") },
         { "team1player1name", match.Team1Player1Name },
         { "team1player1team", match.Team1Player1Team },
@@ -155,6 +154,9 @@ namespace ScoreboardLiveApi {
       }
       if (tClass != null) {
         formData.Add("classid", tClass.ID.ToString());
+      }
+      if (!string.IsNullOrEmpty(match.Tag)) {
+        formData.Add("tag", match.Tag);
       }
       Match.MatchResponse matchResponse = await SendRequest<Match.MatchResponse>("api/match/create_match", device, formData);
       return matchResponse.Match;
@@ -424,7 +426,7 @@ namespace ScoreboardLiveApi {
     /// </summary>
     /// <param name="ba"></param>
     /// <returns></returns>
-    private static string ByteArrayToHexString(byte[] ba) {
+    public static string ByteArrayToHexString(byte[] ba) {
       StringBuilder hex = new StringBuilder(ba.Length * 2);
       foreach (byte b in ba)
         hex.AppendFormat("{0:x2}", b);
@@ -455,26 +457,6 @@ namespace ScoreboardLiveApi {
       string hash;
       using (HMACSHA256 hmac = new HMACSHA256(Encoding.ASCII.GetBytes(device.ClientToken))) {
         hash = device.DeviceCode + ByteArrayToHexString(hmac.ComputeHash(Encoding.UTF8.GetBytes(content)));
-      }
-      return hash;
-    }
-
-    /// <summary>
-    /// Create a hash unique for match with specific players and tournament match number.
-    /// </summary>
-    /// <param name="match">Match to hash.</param>
-    /// <returns>Hash of match names and tournament match number.</returns>
-    public static string HashMatch(Match match) {
-      // Create the string to hash
-      string source = string.Concat(new string []  {
-        match.Team1Player1Name, match.Team1Player1Team, match.Team1Player2Name, match.Team1Player2Team,
-        match.Team2Player1Name, match.Team2Player1Team, match.Team2Player2Name, match.Team2Player2Team,
-        match.TournamentMatchNumber.ToString()
-      });
-      // Hash the match string and return
-      string hash;
-      using (SHA256 sha = SHA256.Create()) {
-        hash = ByteArrayToHexString(sha.ComputeHash(Encoding.UTF8.GetBytes(source)));
       }
       return hash;
     }
