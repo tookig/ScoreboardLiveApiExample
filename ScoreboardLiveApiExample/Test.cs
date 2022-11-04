@@ -8,7 +8,7 @@ using System.Text;
 namespace ScoreboardLiveApiExample {
   class Test {
     private static ApiHelper api = new ApiHelper("https://dosan.scoreboardlive.se");
-    private static readonly string keyStoreFile = string.Format("{0}scoreboardTestAppKeys.bin", AppDomain.CurrentDomain.BaseDirectory);
+    private static readonly string keyStoreFile = string.Format("{0}scoreboardTestDomainAppKeys.bin", AppDomain.CurrentDomain.BaseDirectory);
 
     static async Task<Unit> SelectUnit() {
       List<Unit> units = new List<Unit>();
@@ -34,7 +34,7 @@ namespace ScoreboardLiveApiExample {
       return units[selection - 1];
     }
 
-    static async Task<Device> RegisterWithUnit(Unit unit, LocalKeyStore keyStore) {
+    static async Task<Device> RegisterWithUnit(Unit unit, LocalDomainKeyStore keyStore) {
       // Get activation code from user
       Console.Clear();
       Console.WriteLine("This device is not registered with {0}.", unit.Name);
@@ -56,7 +56,7 @@ namespace ScoreboardLiveApiExample {
       return deviceCredentials;
     }
 
-    static async Task<bool> CheckCredentials(Unit unit, Device device, LocalKeyStore keyStore) {
+    static async Task<bool> CheckCredentials(Unit unit, Device device, LocalDomainKeyStore keyStore) {
       Console.WriteLine("Checking so that the credentials on file for {0} are still valid...", unit.Name);
       bool valid = false;
       try {
@@ -235,8 +235,18 @@ namespace ScoreboardLiveApiExample {
       Console.WriteLine("Unit {0} was selected.", selectedUnit.Name);
 
       // Load the keystore, and select the appropriate key to use for this unit.
+      LocalDomainKeyStore keyStore;
+      try {
+        keyStore = LocalDomainKeyStore.Load(keyStoreFile);
+      } catch (Exception e) {
+        Console.WriteLine("Could not read the key store file: {0}", e.Message);
+        Console.WriteLine("Creating a new key store. Press any key to continue.");
+        Console.ReadLine();
+        keyStore = new LocalDomainKeyStore();
+      }
+      // Set the current domain for the key store
+      keyStore.DefaultDomain = api.BaseUrl;
       // If this device is not registered with that unit, do registration
-      LocalKeyStore keyStore = LocalKeyStore.Load(keyStoreFile);
       while (keyStore.Get(selectedUnit.UnitID) == null) {
         RegisterWithUnit(selectedUnit, keyStore).Wait();
       }

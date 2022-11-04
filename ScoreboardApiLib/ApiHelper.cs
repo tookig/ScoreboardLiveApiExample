@@ -187,6 +187,9 @@ namespace ScoreboardLiveApi {
         { "sequencenumber", match.TournamentMatchNumber.ToString() },
         { "starttime", match.StartTime.ToString("yyyy-MM-dd HH:mm") }
       };
+      if (!string.IsNullOrEmpty(match.Tag)) {
+        formData.Add("tag", match.Tag);
+      }
       // Update match
       Match.MatchResponse matchResponse = await SendRequest<Match.MatchResponse>("api/match/update_match", device, formData);
       // Assing players

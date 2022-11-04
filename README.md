@@ -233,6 +233,9 @@ Search for matches.
 
 # Changelog
 
+#### 2022-11-04
+* Create a new key store, **LocalDomainKeyStore**, fixing the issue of identical Unit ID´s in device information when using different web URL´s.
+
 #### 2022-10-14
 * Add tag to match objects. The tag must be a 64 character string to identify the match.
 
