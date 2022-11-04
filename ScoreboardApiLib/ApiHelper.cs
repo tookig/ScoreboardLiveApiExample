@@ -114,13 +114,14 @@ namespace ScoreboardLiveApi {
     /// Get a specific tournament
     /// </summary>
     /// <param name="tournamentID">ID of tournament to get</param>
+    /// <param name="device">(optional) Device credentials. Not needed for published tournaments.</param>
     /// <returns>Tournament if found.</returns>
-    public async Task<Tournament> GetTournament(int tournamentID) {
+    public async Task<Tournament> GetTournament(int tournamentID, Device device = null) {
       // Create the post data. 
       Dictionary<string, string> formData = new Dictionary<string, string> {
         { "tournamentid", tournamentID.ToString() }
       };
-      Tournament.SingleTournamentResponse tournamentResponse = await SendRequest<Tournament.SingleTournamentResponse>("api/tournament/get_tournament", null, formData);
+      Tournament.SingleTournamentResponse tournamentResponse = await SendRequest<Tournament.SingleTournamentResponse>("api/tournament/get_tournament", device, formData);
       return tournamentResponse.Tournament;
     }
 

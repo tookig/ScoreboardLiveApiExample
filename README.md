@@ -85,7 +85,7 @@ Get all active tournaments for a unit, with the most recent first.
 Get information on a specific tournament.
 
 * **URL:** /api/tournament/get_tournament
-* **Authorization**: none
+* **Authorization**: none or HMAC (if the tournament has a status of anything but 'published' this call needs to be authorized)
 * **Method**: GET or POST
 * **Parameters**:
    * **tournamentid**: ID of tournament to get data for.
