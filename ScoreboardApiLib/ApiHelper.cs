@@ -356,6 +356,20 @@ namespace ScoreboardLiveApi {
       return response.TournamentClass;
     }
 
+    public async Task<Link> CreateLink(Device device, Tournament tournament, Link link) {
+      // Create post data
+      Dictionary<string, string> formData = new Dictionary<string, string> {
+        { "tournamentid", tournament.TournamentID.ToString() },
+        { "sourceclass", link.SourceClassID.ToString() },
+        { "sourceplace", link.SourcePlace.ToString() },
+        { "targetmatch", link.TargetMatchID.ToString() },
+        { "targetteam",  link.TargetTeam }
+      };
+      // Send
+      Link.LinkResponse response = await SendRequest<Link.LinkResponse>("api/tournament/create_link", device, formData);
+      return response.Link;
+    }
+
     /// <summary>
     /// Send a request to the scoreboard server
     /// </summary>
