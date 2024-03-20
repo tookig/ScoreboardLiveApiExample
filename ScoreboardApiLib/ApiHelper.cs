@@ -11,8 +11,10 @@ using System.Linq;
 
 namespace ScoreboardLiveApi {
   public class ApiHelper {
+    // The HTTP client handler to use for all requests
+    private HttpClientHandler m_clientHandler;
     // The client object to make all server requests
-    private readonly HttpClient m_client = new HttpClient();
+    private HttpClient m_client;
 
     /// <summary>
     /// Gets or sets the base URL for the Scoreboard Live server (ex: https://www.scoreboardlive.se).
@@ -24,8 +26,21 @@ namespace ScoreboardLiveApi {
     /// Initializes a new instance of the <see cref="T:ScoreboardLiveApi.Api.ApiHelper"/> class.
     /// </summary>
     /// <param name="baseUrl">Base URL for the Scoreboard Live server.</param>
-    public ApiHelper(string baseUrl, int requestTimeout = 30) {
+    /// <param name="requestTimeout">Request timeout in seconds.</param>
+    /// <param name="acceptAnyCertificates">If set to <c>true</c> accept any certificates, trusted or not.</param>
+    public ApiHelper(string baseUrl, int requestTimeout = 30, bool acceptAnyCertificates = false) {
       BaseUrl = baseUrl;
+      InitHttpClient(requestTimeout, acceptAnyCertificates);
+    }
+
+    protected void InitHttpClient(int requestTimeout, bool acceptAnyCertificates) {
+      // Create the client handler
+      m_clientHandler = new HttpClientHandler();
+      if (acceptAnyCertificates) {
+        m_clientHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+      }
+      // Create the client
+      m_client = new HttpClient(m_clientHandler);
       // Set the default headers to be used for all requests
       m_client.DefaultRequestHeaders.Accept.Clear();
       m_client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -193,19 +208,50 @@ namespace ScoreboardLiveApi {
       }
       // Update match
       Match.MatchResponse matchResponse = await SendRequest<Match.MatchResponse>("api/match/update_match", device, formData);
+      Match updatedMatch = matchResponse.Match;
       // Assing players
       for (int i = 0; i <= 3; i += match.Category.ToLower().EndsWith("s") ? 2 : 1) {
-        (string name, string team) = match.GetPlayerAtIndex(i);
-        Dictionary<string, string> playerData = new Dictionary<string, string> {
-          { "matchid", match.MatchID.ToString() },
-          { "playerIndex", i.ToString() },
-          { "name", name },
-          { "team", team }
-        };
-        string attachAction = string.IsNullOrEmpty(name) ? "detach_player" : "attach_player";
-        matchResponse = await SendRequest<Match.MatchResponse>("api/player/" + attachAction, device, playerData);
+        var playerStrings = match.GetPlayerAtIndex(i);
+        if (string.IsNullOrEmpty(playerStrings.Item1)) {
+          updatedMatch = await DetachPlayer(device, match.MatchID, i);
+        } else {
+          updatedMatch = await AttachPlayer(device, match.MatchID, i, playerStrings);
+        }
       }
-      return matchResponse.Match;
+      return updatedMatch;
+    }
+
+    /// <summary>
+    /// Attach (add) a player to a match
+    /// </summary>
+    /// <param name="device">Device with server credentials</param>
+    /// <param name="matchid">ID of match to update</param>
+    /// <param name="playerIndex">Zero-based index of the player (0 = player 1 of team 1, 1 = player 2 of team 1 etc.)</param>
+    /// <param name="entry">Name and team of the player to attach</param>
+    /// <returns></returns>
+    public async Task<Match> AttachPlayer(Device device, int matchid, int playerIndex, (string playerName, string playerTeam) entry) {
+      Dictionary<string, string> playerData = new Dictionary<string, string> {
+          { "matchid", matchid.ToString() },
+          { "playerIndex", playerIndex.ToString() },
+          { "name", entry.playerName },
+          { "team", entry.playerTeam }
+        };
+      return (await SendRequest<Match.MatchResponse>("api/player/attach_player", device, playerData)).Match;
+    }
+
+    /// <summary>
+    /// Detach (remove) a player from a match
+    /// </summary>
+    /// <param name="device">Device with server credentials</param>
+    /// <param name="matchid">ID of match to detach player from</param>
+    /// <param name="playerIndex">Zero-based index of the player (0 = player 1 of team 1, 1 = player 2 of team 1 etc.)</param>
+    /// <returns></returns>
+    public async Task<Match> DetachPlayer(Device device, int matchid, int playerIndex) {
+      Dictionary<string, string> playerData = new Dictionary<string, string> {
+          { "matchid", matchid.ToString() },
+          { "playerIndex", playerIndex.ToString() }
+        };
+      return (await SendRequest<Match.MatchResponse>("api/player/detach_player", device, playerData)).Match;
     }
 
     /// <summary>
