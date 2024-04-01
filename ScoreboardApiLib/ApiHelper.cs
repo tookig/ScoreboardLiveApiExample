@@ -59,6 +59,15 @@ namespace ScoreboardLiveApi {
     }
 
     /// <summary>
+    /// Get the socket URL for the server
+    /// </summary>
+    /// <returns>Socket URL</returns>
+    public async Task<string> GetSocketURL() {
+      SocketInfo.SocketInfoResponse response = await SendRequest<SocketInfo.SocketInfoResponse>("api/socketcontroller/get_uri", null, null);
+      return response.URL;
+    } 
+
+    /// <summary>
     /// Register a device with the server
     /// </summary>
     /// <param name="activationCode">Activation code</param>
@@ -119,7 +128,7 @@ namespace ScoreboardLiveApi {
       // Create the post data. Limit is the max number of the most recent
       // tournaments to return.
       Dictionary<string, string> formData = new Dictionary<string, string> {
-        { "limit", limit.ToString() }
+        { "limit", "200" } // limit.ToString() }
       };
       Tournament.TournamentResponse tournamentResponse = await SendRequest<Tournament.TournamentResponse>("api/unit/get_tournaments", device, formData);
       return tournamentResponse.Tournaments;
