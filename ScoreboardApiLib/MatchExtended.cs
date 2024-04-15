@@ -41,10 +41,6 @@ namespace ScoreboardLiveApi {
           if (index < 1 || index > 5) throw new IndexOutOfRangeException("Set index can be between 1 and 5");
           return sets[index - 1];
         }
-        set {
-          if (index < 1 || index > 5) throw new IndexOutOfRangeException("Set index can be between 1 and 5");
-          sets[index - 1] = value;
-        }
       }
     }
 
