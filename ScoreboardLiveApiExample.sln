@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31613.86
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34309.116
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScoreboardLiveApiExample", "ScoreboardLiveApiExample\ScoreboardLiveApiExample.csproj", "{D067C4D1-FF71-470C-BF8E-0931503BFD0F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScoreboardLiveApiExample", "ScoreboardLiveApiExample\ScoreboardLiveApiExample.csproj", "{D067C4D1-FF71-470C-BF8E-0931503BFD0F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScoreboardApiLib", "ScoreboardApiLib\ScoreboardApiLib.csproj", "{3DF52F05-971F-41FA-829C-7B2C4831C843}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScoreboardApiLib", "ScoreboardApiLib\ScoreboardApiLib.csproj", "{3DF52F05-971F-41FA-829C-7B2C4831C843}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScoreboardApiTest", "ScoreboardApiTest\ScoreboardApiTest.csproj", "{0B0705AA-006C-4F11-BE00-8E2456843719}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{3DF52F05-971F-41FA-829C-7B2C4831C843}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3DF52F05-971F-41FA-829C-7B2C4831C843}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3DF52F05-971F-41FA-829C-7B2C4831C843}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0B0705AA-006C-4F11-BE00-8E2456843719}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B0705AA-006C-4F11-BE00-8E2456843719}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B0705AA-006C-4F11-BE00-8E2456843719}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B0705AA-006C-4F11-BE00-8E2456843719}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
