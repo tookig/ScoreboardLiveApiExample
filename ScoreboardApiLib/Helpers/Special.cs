@@ -15,6 +15,7 @@ namespace ScoreboardLiveApi {
     public static Special Retired { get { return new Special("retired"); } }
 
     public static Special FromString(string value) {
+      if (string.IsNullOrEmpty(value)) return None;
       switch (value) {
         case "none": return None;
         case "walkover": return WalkOver;
