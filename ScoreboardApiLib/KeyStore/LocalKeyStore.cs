@@ -6,10 +6,10 @@ using System.IO;
 namespace ScoreboardLiveApi {
   [Serializable]
   public class LocalKeyStore: IKeyStore {
-    private List<Device> m_devices;
+    private readonly List<Device> m_devices;
 
     public LocalKeyStore() {
-      m_devices = new List<Device>();
+      m_devices = [];
     }
 
     public Device Get(int unitId) {
@@ -27,10 +27,10 @@ namespace ScoreboardLiveApi {
     }
 
     public void Save(string filename) {
-      FileStream stream = new FileStream(filename, FileMode.Create);
+      FileStream stream = new(filename, FileMode.Create);
       using (stream) {
 #pragma warning disable SYSLIB0011 // Type or member is obsolete
-        System.Runtime.Serialization.Formatters.Binary.BinaryFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+        System.Runtime.Serialization.Formatters.Binary.BinaryFormatter formatter = new();
 #pragma warning restore SYSLIB0011 // Type or member is obsolete
         formatter.Serialize(stream, this);
       }
@@ -40,10 +40,10 @@ namespace ScoreboardLiveApi {
       if (!File.Exists(filename)) {
         return new LocalKeyStore();
       }
-      FileStream stream = new FileStream(filename, FileMode.Open);
+      FileStream stream = new(filename, FileMode.Open);
       using (stream) {
 #pragma warning disable SYSLIB0011 // Type or member is obsolete
-        System.Runtime.Serialization.Formatters.Binary.BinaryFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+        System.Runtime.Serialization.Formatters.Binary.BinaryFormatter formatter = new();
 #pragma warning restore SYSLIB0011 // Type or member is obsolete
         return (LocalKeyStore)formatter.Deserialize(stream);
       }
@@ -54,14 +54,19 @@ namespace ScoreboardLiveApi {
     private const string c_id_version = "Settings.version";
     private const string c_id_devices = "Settings.devices";
 
+#pragma warning disable IDE0060 // Remove unused parameter - needed for ISerializable
     protected LocalKeyStore(SerializationInfo info, StreamingContext context) {
       m_devices = (List<Device>)info.GetValue(c_id_devices, typeof(List<Device>));
     }
+#pragma warning restore IDE0060 // Remove unused parameter
 
+#pragma warning disable IDE0060 // Remove unused parameter - needed for ISerializable
     public void GetObjectData(SerializationInfo info, StreamingContext context) {
       info.AddValue(c_id_version, c_version);
       info.AddValue(c_id_devices, m_devices);
     }
+#pragma warning restore IDE0060 // Remove unused parameter
+
     #endregion
   }
 }

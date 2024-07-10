@@ -13,12 +13,12 @@ namespace ScoreboardLiveApi {
   /// </summary>
   [Serializable]
   public class LocalDomainKeyStore : IKeyStore, ISerializable {
-    private Dictionary<string, List<Device>> m_devices;
+    private readonly Dictionary<string, List<Device>> m_devices;
 
     public string DefaultDomain { get; set; }
 
     public LocalDomainKeyStore(string defaultDomain = "default") {
-      m_devices = new Dictionary<string, List<Device>>();
+      m_devices = [];
       DefaultDomain = defaultDomain;
     }
 
@@ -27,8 +27,7 @@ namespace ScoreboardLiveApi {
     }
 
     public Device Get(int unitId, string domain) {
-      List<Device> domainDevices;
-      if (m_devices.TryGetValue(domain, out domainDevices)) {
+      if (m_devices.TryGetValue(domain, out List<Device> domainDevices)) {
         return domainDevices.Find(device => device.UnitID == unitId);
       }
       return null;
@@ -42,9 +41,8 @@ namespace ScoreboardLiveApi {
       if (device == null) throw new ArgumentNullException(nameof(device), "Device reference cannot be null");
       if (domain == null) throw new ArgumentNullException(nameof(domain), "Domain identifier reference cannot be null");
 
-      List<Device> domainDevices;
-      if (!m_devices.TryGetValue(domain, out domainDevices)) {
-        domainDevices = new List<Device>();
+      if (!m_devices.TryGetValue(domain, out List<Device> domainDevices)) {
+        domainDevices = [];
         m_devices.Add(domain, domainDevices);
       }
 
@@ -57,18 +55,16 @@ namespace ScoreboardLiveApi {
     }
 
     public void Remove(Device device, string domain) {
-      List<Device> domainDevices;
-      if (m_devices.TryGetValue(domain, out domainDevices)) {
+      if (m_devices.TryGetValue(domain, out List<Device> domainDevices)) {
         domainDevices.RemoveAll(savedDevice => device.UnitID == savedDevice.UnitID);
       }
-      
     }
 
     public void Save(string filename) {
-      FileStream stream = new FileStream(filename, FileMode.Create);
+      FileStream stream = new(filename, FileMode.Create);
       using (stream) {
 #pragma warning disable SYSLIB0011 // Type or member is obsolete
-        System.Runtime.Serialization.Formatters.Binary.BinaryFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+        System.Runtime.Serialization.Formatters.Binary.BinaryFormatter formatter = new();
 #pragma warning restore SYSLIB0011 // Type or member is obsolete
         formatter.Serialize(stream, this);
       }
@@ -78,10 +74,10 @@ namespace ScoreboardLiveApi {
       if (!File.Exists(filename)) {
         return new LocalDomainKeyStore();
       }
-      FileStream stream = new FileStream(filename, FileMode.Open);
+      FileStream stream = new(filename, FileMode.Open);
       using (stream) {
 #pragma warning disable SYSLIB0011 // Type or member is obsolete
-        System.Runtime.Serialization.Formatters.Binary.BinaryFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+        System.Runtime.Serialization.Formatters.Binary.BinaryFormatter formatter = new();
 #pragma warning restore SYSLIB0011 // Type or member is obsolete
         return (LocalDomainKeyStore)formatter.Deserialize(stream);
       }
