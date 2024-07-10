@@ -23,6 +23,13 @@ namespace ScoreboardLiveApi {
     public string BaseUrl { get; set; }
 
     /// <summary>
+    /// Event that is triggered when an error occurs during a request to the server.
+    /// This is sent on a different thread than the one that triggered the error, and in parallel
+    /// with the throwing of the exception.
+    /// </summary>
+    public event EventHandler<ApiHelperErrorEventArgs> Error;
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="T:ScoreboardLiveApi.Api.ApiHelper"/> class.
     /// </summary>
     /// <param name="baseUrl">Base URL for the Scoreboard Live server.</param>
@@ -102,7 +109,7 @@ namespace ScoreboardLiveApi {
       HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, string.Format("{0}api/device/check_registration", AppendSlash(BaseUrl)));
       request.Headers.Add("Authorization", authentication);
       request.Content = content;
-      HttpResponseMessage response = await m_client.SendAsync(request);
+      HttpResponseMessage response = await TrySendAsync(request);
       // If the response is a 403 - forbidden, these credentials are no longer valid and should be forgotten.
       // If the response is a 200 - OK, all is well. Any other response means the server was unable to check
       // the credentials for some reason. Check the response exception error messages to find clues.
@@ -115,7 +122,8 @@ namespace ScoreboardLiveApi {
       // Try and get the reasons for the failure. If the serializer throws, it's probably due to an internal
       // server error, since this will not generate valid json.
       ScoreboardResponse scoreboardResponse = await TryReadResponse<ScoreboardResponse>(response);
-      throw (new ScoreboardLiveApiException(response.StatusCode, scoreboardResponse));
+      OnError(ApiHelperErrorEventArgs.ErrorStage.HttpError, new ScoreboardLiveApiException(response.StatusCode, scoreboardResponse));
+      throw new ScoreboardLiveApiException(response.StatusCode, scoreboardResponse);
     }
 
     /// <summary>
@@ -449,15 +457,30 @@ namespace ScoreboardLiveApi {
         request.Headers.Add("Authorization", authentication);
       }
       // Send the request
-      HttpResponseMessage response = await m_client.SendAsync(request);
+      HttpResponseMessage response = await TrySendAsync(request);
       // Try and parse the json
       T scoreboardResponse = await TryReadResponse<T>(response);
       // Throw error if request is not successfull
       if (!response.IsSuccessStatusCode) {
+        OnError(ApiHelperErrorEventArgs.ErrorStage.HttpError, new ScoreboardLiveApiException(response.StatusCode, scoreboardResponse));
         throw (new ScoreboardLiveApiException(response.StatusCode, scoreboardResponse));
       }
       // Return the response
       return scoreboardResponse;
+    }
+
+    /// <summary>
+    /// Helper function that tries to send a request. If it fails, it sends an error event and throws an exception.
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
+    private async Task<HttpResponseMessage> TrySendAsync(HttpRequestMessage request) {
+      try {
+        return await m_client.SendAsync(request);
+      } catch (Exception e) {
+        OnError(ApiHelperErrorEventArgs.ErrorStage.ConnectionError, e);
+        throw e;
+      }
     }
 
     /// <summary>
@@ -468,7 +491,7 @@ namespace ScoreboardLiveApi {
     /// <typeparam name="T">ScoreboardResponse type</typeparam>
     /// <param name="httpResponse">The http request response to try and parse</param>
     /// <returns></returns>
-    private static async Task<T> TryReadResponse<T>(HttpResponseMessage httpResponse) where T : ScoreboardResponse {
+    private async Task<T> TryReadResponse<T>(HttpResponseMessage httpResponse) where T : ScoreboardResponse {
       T scoreboardResponse = null;
       // Create default options
       JsonSerializerOptions options = new JsonSerializerOptions {
@@ -477,9 +500,21 @@ namespace ScoreboardLiveApi {
       try {
         scoreboardResponse = await JsonSerializer.DeserializeAsync<T>(await httpResponse.Content.ReadAsStreamAsync(), options) as T;
       } catch (Exception e) {
-        if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK) throw e;
+        if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK) {
+          OnError(ApiHelperErrorEventArgs.ErrorStage.ParseError, e);
+          throw e;
+        }
       }
       return scoreboardResponse;
+    }
+
+    /// <summary>
+    /// Send an error event to all listeners using a different thread
+    /// </summary>
+    /// <param name="stage">The error type</param>
+    /// <param name="exception">Exception thrown</param>
+    private void OnError(ApiHelperErrorEventArgs.ErrorStage stage, Exception exception) {
+      Task.Run(() => Error?.Invoke(this, new ApiHelperErrorEventArgs(this, stage, exception)));
     }
 
     /// <summary>
