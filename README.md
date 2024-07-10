@@ -233,6 +233,9 @@ Search for matches.
 
 # Changelog
 
+#### 2024-07-10
+* All projects now target .NET 8.0
+
 #### 2022-11-04
 * Create a new key store, **LocalDomainKeyStore**, fixing the issue of identical Unit ID´s in device information when using different web URL´s.
 
