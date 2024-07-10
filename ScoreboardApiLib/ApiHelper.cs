@@ -479,7 +479,7 @@ namespace ScoreboardLiveApi {
         return await m_client.SendAsync(request);
       } catch (Exception e) {
         OnError(ApiHelperErrorEventArgs.ErrorStage.ConnectionError, e);
-        throw e;
+        throw;
       }
     }
 
@@ -495,14 +495,14 @@ namespace ScoreboardLiveApi {
       T scoreboardResponse = null;
       // Create default options
       JsonSerializerOptions options = new JsonSerializerOptions {
-        IgnoreNullValues = true
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
       };
       try {
         scoreboardResponse = await JsonSerializer.DeserializeAsync<T>(await httpResponse.Content.ReadAsStreamAsync(), options) as T;
       } catch (Exception e) {
         if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK) {
           OnError(ApiHelperErrorEventArgs.ErrorStage.ParseError, e);
-          throw e;
+          throw;
         }
       }
       return scoreboardResponse;
