@@ -136,7 +136,7 @@ namespace ScoreboardLiveApi {
       // Create the post data. Limit is the max number of the most recent
       // tournaments to return.
       Dictionary<string, string> formData = new Dictionary<string, string> {
-        { "limit", "200" } // limit.ToString() }
+        { "limit", limit.ToString() }
       };
       Tournament.TournamentResponse tournamentResponse = await SendRequest<Tournament.TournamentResponse>("api/unit/get_tournaments", device, formData);
       return tournamentResponse.Tournaments;
