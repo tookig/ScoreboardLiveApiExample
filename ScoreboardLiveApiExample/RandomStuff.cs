@@ -50,6 +50,8 @@ namespace ScoreboardLiveApiExample {
       }
       match.StartTime = DateTime.Now;
       match.TournamentMatchNumber = randomizer.Next(99) + 1;
+      match.Umpire = randomizer.Next(2) == 0 ? MaleName() : FemaleName();
+      match.ServiceJudge = randomizer.Next(2) == 0 ? MaleName() : FemaleName();
       return match;
     }
   }

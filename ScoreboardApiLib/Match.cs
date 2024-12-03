@@ -49,6 +49,11 @@ namespace ScoreboardLiveApi {
     [JsonPropertyName("team2player2team")]
     public string Team2Player2Team { get; set; }
 
+    [JsonPropertyName("umpire")]
+    public string Umpire { get; set; }
+    [JsonPropertyName("servicejudge")]
+    public string ServiceJudge { get; set; }
+
     [JsonPropertyName("status")]
     public string Status { get; set; }
 

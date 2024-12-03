@@ -7,7 +7,7 @@ using System.Text;
 
 namespace ScoreboardLiveApiExample {
   class Test {
-    private static ApiHelper api = new ApiHelper("https://dosan.scoreboardlive.se");
+    private static ApiHelper api = new ApiHelper("https://demo.scoreboardlive.se");
     private static readonly string keyStoreFile = string.Format("{0}scoreboardTestDomainAppKeys.bin", AppDomain.CurrentDomain.BaseDirectory);
 
     static async Task<Unit> SelectUnit() {
