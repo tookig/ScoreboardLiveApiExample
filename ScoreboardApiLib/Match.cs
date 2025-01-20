@@ -66,6 +66,11 @@ namespace ScoreboardLiveApi {
     [JsonPropertyName("tag")]
     public string Tag { get; set; }
 
+    [JsonPropertyName("logo1")]
+    public string Logo1 { get; set; }
+    [JsonPropertyName("logo2")]
+    public string Logo2 { get; set; }
+
     [JsonIgnore]
     public DateTime StartTime {
       get {
