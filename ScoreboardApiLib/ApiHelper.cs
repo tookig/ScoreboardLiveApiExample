@@ -186,7 +186,9 @@ namespace ScoreboardLiveApi {
         { "team2player2name", match.Team2Player2Name },
         { "team2player2team", match.Team2Player2Team },
         { "umpire", match.Umpire },
-        { "servicejudge", match.ServiceJudge }
+        { "servicejudge", match.ServiceJudge },
+        { "logo1", match.Logo1 },
+        { "logo2", match.Logo2 }
       };
       if (tournament != null) {
         formData.Add("tournamentid", tournament.TournamentID.ToString());
@@ -226,7 +228,9 @@ namespace ScoreboardLiveApi {
         { "sequencenumber", match.TournamentMatchNumber.ToString() },
         { "starttime", match.StartTime.ToString("yyyy-MM-dd HH:mm") },
         { "umpire", match.Umpire },
-        { "servicejudge", match.ServiceJudge }
+        { "servicejudge", match.ServiceJudge },
+        { "logo1", match.Logo1 },
+        { "logo2", match.Logo2 }
       };
       if (!string.IsNullOrEmpty(match.Tag)) {
         formData.Add("tag", match.Tag);
