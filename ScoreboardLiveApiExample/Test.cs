@@ -7,7 +7,7 @@ using System.Text;
 
 namespace ScoreboardLiveApiExample {
   class Test {
-    private static ApiHelper api = new ApiHelper("https://demo.scoreboardlive.se");
+    private static ApiHelper api = new ApiHelper("http://192.168.100.10:9000");
     private static readonly string keyStoreFile = string.Format("{0}scoreboardTestDomainAppKeys.bin", AppDomain.CurrentDomain.BaseDirectory);
 
     static async Task<Unit> SelectUnit() {
@@ -150,7 +150,7 @@ namespace ScoreboardLiveApiExample {
       // List them for user to select
       int i = 1;
       foreach (Court court in courts) {
-        Console.WriteLine("{0}. {1} ({2})", i++, court.Name, court.Venue.Name);
+        Console.WriteLine("{0}. {1} ({2})", i++, court.Name, court.Venue?.Name);
       }
       // Get user input
       Console.Write("Select a court: ");
@@ -228,7 +228,7 @@ namespace ScoreboardLiveApiExample {
       return hash;
     }
 
-    static void Main(string[] args) {
+    public static void RunTest() {
       // Select a unit
       Unit selectedUnit = SelectUnit().Result;
       if (selectedUnit == null) return;

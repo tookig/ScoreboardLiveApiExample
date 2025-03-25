@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 using System.Linq;
+using ScoreboardApiLib.Helpers;
 
 namespace ScoreboardLiveApi {
   public class ApiHelper {
@@ -160,6 +161,54 @@ namespace ScoreboardLiveApi {
       Tournament.SingleTournamentResponse tournamentResponse = await SendRequest<Tournament.SingleTournamentResponse>("api/tournament/get_tournament", device, formData);
       return tournamentResponse.Tournament;
     }
+
+    /// <summary>
+    /// Create a multi series tournament
+    /// </summary>
+    /// <param name="device">Device to use for authorization</param>
+    /// <param name="name">Name of tournament</param>
+    /// <param name="scoreSystem">Tournament score system</param>
+    /// <param name="timezone">Tournament time zone</param>
+    /// <param name="startDate">Tournament start date</param>
+    /// <param name="endDate">Tournament end date</param>
+    /// <returns>The new tournament if successfully created</returns>
+    public async Task<Tournament> CreateMultiSeriesTournament(Device device, string name, ScoreSystem scoreSystem, string timezone, DateTime startDate, DateTime endDate) {
+      Dictionary<string, string> formData = new() {
+        { "name", name },
+        { "scoresystem", scoreSystem },
+        { "timezone", timezone },
+        { "startdate", startDate.ToString("yyyy-MM-dd") },
+        { "enddate", startDate.ToString("yyyy-MM-dd") },
+        { "type", "multiseries" }
+      };
+      Tournament.SingleTournamentResponse tournamentResponse = await SendRequest<Tournament.SingleTournamentResponse>("api/tournament/update_tournament", device, formData);
+      return tournamentResponse.Tournament;
+    }
+
+    /// <summary>
+    /// Create a new series tournament
+    /// </summary>
+    /// <param name="device">Device to use for authorization</param>
+    /// <param name="parentTournament">Parent tournament</param>
+    /// <param name="starts">Tournament start date and time</param>
+    /// <param name="team1">Team 1 name</param>
+    /// <param name="team2">Team 2 name</param>
+    /// <param name="seriesSetup">Match count setup</param>
+    /// <returns>The new tournament if successfully created</returns>
+    public async Task<Tournament> CreateSeriesTournament(Device device, Tournament parentTournament, DateTime starts, string team1, string team2, SeriesSetup seriesSetup) {
+      Dictionary<string, string> formData = new() {
+        { "parenttournamentid", parentTournament.TournamentID.ToString() },
+        { "startdate", starts.ToString("yyyy-MM-dd") },
+        { "starttime", starts.ToString("HH:mm") },
+        { "team1", team1 },
+        { "team2", team2 },
+        { "type", "series" },
+        { "series_setup", seriesSetup.ToString() }
+      };
+      Tournament.SingleTournamentResponse tournamentResponse = await SendRequest<Tournament.SingleTournamentResponse>("api/tournament/update_tournament", device, formData);
+      return tournamentResponse.Tournament;
+    }
+      
 
     /// <summary>
     /// Create a match.

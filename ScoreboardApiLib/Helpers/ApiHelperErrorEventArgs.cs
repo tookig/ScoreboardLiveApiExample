@@ -18,5 +18,9 @@ namespace ScoreboardLiveApi {
       Stage = stage;
       Exception = exception;
     }
+
+    public override string ToString() {
+      return $"{Stage}: {Exception}";
+    } 
   }
 }
