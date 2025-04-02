@@ -178,7 +178,7 @@ namespace ScoreboardLiveApi {
         { "scoresystem", scoreSystem },
         { "timezone", timezone },
         { "startdate", startDate.ToString("yyyy-MM-dd") },
-        { "enddate", startDate.ToString("yyyy-MM-dd") },
+        { "enddate", endDate.ToString("yyyy-MM-dd") },
         { "type", "multiseries" }
       };
       Tournament.SingleTournamentResponse tournamentResponse = await SendRequest<Tournament.SingleTournamentResponse>("api/tournament/update_tournament", device, formData);
@@ -453,6 +453,21 @@ namespace ScoreboardLiveApi {
       // Create the post data.
       Dictionary<string, string> formData = new() {
         { "classid", classId.ToString() }
+      };
+      Match.MatchesResponse response = await SendRequest<Match.MatchesResponse>("api/match/get_matches", device, formData);
+      return response.Matches;
+    }
+
+    /// <summary>
+    /// Get all matches for a specific tournament
+    /// </summary>
+    /// <param name="device">Device credentials</param>
+    /// <param name="classId">ID of tournament to find matches for</param>
+    /// <returns></returns>
+    public async Task<List<Match>> FindMatchesByTournament(Device device, int tournamentId) {
+      // Create the post data.
+      Dictionary<string, string> formData = new() {
+        { "tournamentid", tournamentId.ToString() }
       };
       Match.MatchesResponse response = await SendRequest<Match.MatchesResponse>("api/match/get_matches", device, formData);
       return response.Matches;
