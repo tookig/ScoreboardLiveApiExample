@@ -63,6 +63,12 @@ namespace ScoreboardLiveApi {
     [JsonPropertyName("starttime")]
     public string JsonStartTime { get; set; }
 
+    [JsonPropertyName("firstpoint")]
+    public string JsonFirstPoint { get; set; }
+
+    [JsonPropertyName("lastpoint")]
+    public string JsonLastPoint { get; set; }
+
     [JsonPropertyName("tag")]
     public string Tag { get; set; }
 
@@ -78,6 +84,26 @@ namespace ScoreboardLiveApi {
       }
       set {
         JsonStartTime = value.ToString("yyyy-MM-dd HH:mm:00");
+      }
+    }
+
+    [JsonIgnore]
+    public DateTime FirstPoint {
+      get {
+        return DateTime.ParseExact(JsonFirstPoint, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+      }
+      set {
+        JsonFirstPoint = value.ToString("yyyy-MM-dd HH:mm:ss");
+      }
+    }
+
+    [JsonIgnore]
+    public DateTime LastPoint {
+      get {
+        return DateTime.ParseExact(JsonLastPoint, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+      }
+      set {
+        JsonLastPoint = value.ToString("yyyy-MM-dd HH:mm:ss");
       }
     }
 
