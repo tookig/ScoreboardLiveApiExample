@@ -12,9 +12,10 @@ using System.Linq;
 namespace ScoreboardLiveApi {
   public class ApiHelper {
     // The HTTP client handler to use for all requests
-    private HttpClientHandler m_clientHandler;
+    private readonly HttpClientHandler m_clientHandler;
     // The client object to make all server requests
-    private HttpClient m_client;
+    private readonly HttpClient m_client;
+
     // Default json options to use for all json serialization
     private readonly JsonSerializerOptions m_jsonDefaultOptions = new() {
       DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
@@ -31,7 +32,7 @@ namespace ScoreboardLiveApi {
     /// This is sent on a different thread than the one that triggered the error, and in parallel
     /// with the throwing of the exception.
     /// </summary>
-    public event EventHandler<ApiHelperErrorEventArgs> Error;
+    public event EventHandler<ApiHelperErrorEventArgs>? Error;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="T:ScoreboardLiveApi.Api.ApiHelper"/> class.
@@ -41,23 +42,24 @@ namespace ScoreboardLiveApi {
     /// <param name="acceptAnyCertificates">If set to <c>true</c> accept any certificates, trusted or not.</param>
     public ApiHelper(string baseUrl, int requestTimeout = 30, bool acceptAnyCertificates = false) {
       BaseUrl = baseUrl;
-      InitHttpClient(requestTimeout, acceptAnyCertificates);
+      (m_clientHandler, m_client) = InitHttpClient(requestTimeout, acceptAnyCertificates);
     }
 
-    protected void InitHttpClient(int requestTimeout, bool acceptAnyCertificates) {
+    protected static (HttpClientHandler, HttpClient) InitHttpClient(int requestTimeout, bool acceptAnyCertificates) {
       // Create the client handler
-      m_clientHandler = new HttpClientHandler();
+      HttpClientHandler handler = new();
       if (acceptAnyCertificates) {
-        m_clientHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+        handler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
       }
       // Create the client
-      m_client = new HttpClient(m_clientHandler);
+      HttpClient client = new(handler);
       // Set the default headers to be used for all requests
-      m_client.DefaultRequestHeaders.Accept.Clear();
-      m_client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-      m_client.DefaultRequestHeaders.Add("User-Agent", "Scoreboard Live API Helper");
+      client.DefaultRequestHeaders.Accept.Clear();
+      client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+      client.DefaultRequestHeaders.Add("User-Agent", "Scoreboard Live API Helper");
       // Set timeout
-      m_client.Timeout = TimeSpan.FromSeconds(requestTimeout);
+      client.Timeout = TimeSpan.FromSeconds(requestTimeout);
+      return (handler, client);
     }
 
     /// <summary>
@@ -75,7 +77,7 @@ namespace ScoreboardLiveApi {
     /// <returns>Socket URL</returns>
     public async Task<string> GetSocketURL() {
       SocketInfo.SocketInfoResponse response = await SendRequest<SocketInfo.SocketInfoResponse>("api/socketcontroller/get_uri", null, null);
-      return response.URL;
+      return response.URL ?? string.Empty;
     } 
 
     /// <summary>
@@ -85,11 +87,14 @@ namespace ScoreboardLiveApi {
     /// <returns>The newly created credentials</returns>
     public async Task<Device> RegisterDevice(string activationCode) {
       // Create the post data
-      Dictionary<string, string> formData = new() {
+      Dictionary<string, string?> formData = new() {
         { "activationCode", activationCode }
       };
       // Send request
       Device.DeviceResponse deviceResponse = await SendRequest<Device.DeviceResponse>("api/device/register_device", null, formData);
+      if (deviceResponse.Device == null) {
+        throw new Exception("Device could not be created; null value returned from registration call.");
+      }
       return deviceResponse.Device;
     }
 
@@ -139,7 +144,7 @@ namespace ScoreboardLiveApi {
     public async Task<List<Tournament>> GetTournaments(Device device, int limit) {
       // Create the post data. Limit is the max number of the most recent
       // tournaments to return.
-      Dictionary<string, string> formData = new() {
+      Dictionary<string, string?> formData = new() {
         { "limit", limit.ToString() }
       };
       Tournament.TournamentResponse tournamentResponse = await SendRequest<Tournament.TournamentResponse>("api/unit/get_tournaments", device, formData);
@@ -152,9 +157,9 @@ namespace ScoreboardLiveApi {
     /// <param name="tournamentID">ID of tournament to get</param>
     /// <param name="device">(optional) Device credentials. Not needed for published tournaments.</param>
     /// <returns>Tournament if found.</returns>
-    public async Task<Tournament> GetTournament(int tournamentID, Device device = null) {
+    public async Task<Tournament?> GetTournament(int tournamentID, Device? device = null) {
       // Create the post data. 
-      Dictionary<string, string> formData = new() {
+      Dictionary<string, string?> formData = new() {
         { "tournamentid", tournamentID.ToString() }
       };
       Tournament.SingleTournamentResponse tournamentResponse = await SendRequest<Tournament.SingleTournamentResponse>("api/tournament/get_tournament", device, formData);
@@ -171,9 +176,9 @@ namespace ScoreboardLiveApi {
     /// <param name="tClass">If this match is to belong to a round-robin tournament class, add class data here. 
     ///                      Set as null otherwise</param>
     /// <param name="match">The match to add</param>
-    public async Task<Match> CreateMatch(Device device, Tournament tournament, TournamentClass tClass, Match match) {
+    public async Task<Match> CreateMatch(Device device, Tournament? tournament, TournamentClass? tClass, Match match) {
       // Create the post data
-      Dictionary<string, string> formData = new() {
+      Dictionary<string, string?> formData = new() {
         { "category", match.Category },
         { "sequencenumber", match.TournamentMatchNumber.ToString() },
         { "starttime", match.StartTime.ToString("yyyy-MM-dd HH:mm") },
@@ -200,7 +205,10 @@ namespace ScoreboardLiveApi {
         formData.Add("tag", match.Tag);
       }
       Match.MatchResponse matchResponse = await SendRequest<Match.MatchResponse>("api/match/create_match", device, formData);
-      return matchResponse.Match;
+      if (matchResponse.Match != null) {
+        return matchResponse.Match;
+      }
+      throw new Exception("Error when creating match; server returned null");
     }
 
     /// <summary>
@@ -223,7 +231,7 @@ namespace ScoreboardLiveApi {
     /// <returns></returns>
     public async Task<Match> UpdateMatch(Device device, Match match) {
       // Create POST-data
-      Dictionary<string, string> formData = new() {
+      Dictionary<string, string?> formData = new() {
         { "matchid", match.MatchID.ToString() },
         { "sequencenumber", match.TournamentMatchNumber.ToString() },
         { "starttime", match.StartTime.ToString("yyyy-MM-dd HH:mm") },
@@ -237,9 +245,13 @@ namespace ScoreboardLiveApi {
       }
       // Update match
       Match.MatchResponse matchResponse = await SendRequest<Match.MatchResponse>("api/match/update_match", device, formData);
+      if (matchResponse.Match == null) {
+        throw new Exception("Error when updating match; server returned null");
+      }
       Match updatedMatch = matchResponse.Match;
+      Category matchCategory = Category.FromString(updatedMatch.Category ?? string.Empty);
       // Assing players
-      for (int i = 0; i <= 3; i += match.Category.ToLower().EndsWith('s') ? 2 : 1) {
+      for (int i = 0; i <= 3; i += matchCategory.IsSingles() ? 2 : 1) {
         var playerStrings = match.GetPlayerAtIndex(i);
         if (string.IsNullOrEmpty(playerStrings.Item1)) {
           updatedMatch = await DetachPlayer(device, match.MatchID, i);
@@ -259,13 +271,14 @@ namespace ScoreboardLiveApi {
     /// <param name="entry">Name and team of the player to attach</param>
     /// <returns></returns>
     public async Task<Match> AttachPlayer(Device device, int matchid, int playerIndex, (string playerName, string playerTeam) entry) {
-      Dictionary<string, string> playerData = new() {
+      Dictionary<string, string?> playerData = new() {
           { "matchid", matchid.ToString() },
           { "playerIndex", playerIndex.ToString() },
           { "name", entry.playerName },
           { "team", entry.playerTeam }
         };
-      return (await SendRequest<Match.MatchResponse>("api/player/attach_player", device, playerData)).Match;
+      Match.MatchResponse updatedMatch = await SendRequest<Match.MatchResponse>("api/player/attach_player", device, playerData);
+      return updatedMatch?.Match ?? throw new Exception("Could not attach player; server returned null");
     }
 
     /// <summary>
@@ -276,11 +289,12 @@ namespace ScoreboardLiveApi {
     /// <param name="playerIndex">Zero-based index of the player (0 = player 1 of team 1, 1 = player 2 of team 1 etc.)</param>
     /// <returns></returns>
     public async Task<Match> DetachPlayer(Device device, int matchid, int playerIndex) {
-      Dictionary<string, string> playerData = new() {
+      Dictionary<string, string?> playerData = new() {
           { "matchid", matchid.ToString() },
           { "playerIndex", playerIndex.ToString() }
         };
-      return (await SendRequest<Match.MatchResponse>("api/player/detach_player", device, playerData)).Match;
+      Match.MatchResponse updatedMatch = await SendRequest<Match.MatchResponse>("api/player/detach_player", device, playerData);
+      return updatedMatch?.Match ?? throw new Exception("Could not detach player; server returned null");
     }
 
     /// <summary>
@@ -290,7 +304,7 @@ namespace ScoreboardLiveApi {
     /// <param name="match">Match to set scores for.</param>
     public async Task<Match> SetScore(Device device, MatchExtended match) {
       // Create POST-data
-      Dictionary<string, string> formData = new() {
+      Dictionary<string, string?> formData = new() {
         { "matchid", match.MatchID.ToString() },
         { "team1set1", match.Team1Set1.ToString() },
         { "team1set2", match.Team1Set2.ToString() },
@@ -314,7 +328,8 @@ namespace ScoreboardLiveApi {
       }
       // Set score
       Match.MatchResponse matchResponse = await SendRequest<Match.MatchResponse>("api/match/set_score", device, formData);
-      return matchResponse.Match;
+      return matchResponse?.Match ?? throw new Exception("Could not set score; server returned null");
+
     }
 
     /// <summary>
@@ -324,7 +339,7 @@ namespace ScoreboardLiveApi {
     /// <param name="device">Device to look up courts for.</param>
     public async Task<List<Court>> GetCourts(Device device) {
       // Create the post data.
-      Dictionary<string, string> formData = new() {
+      Dictionary<string, string?> formData = new() {
         { "addvenueinfo", "1" } // Makes sure venue info is added to the returned json
       };
       Court.CourtResponse courtResponse = await SendRequest<Court.CourtResponse>("api/court/get_courts", device, formData);
@@ -340,7 +355,7 @@ namespace ScoreboardLiveApi {
     /// <param name="court">Court for the match to be assigned to.</param>
     public async Task AssignMatchToCourt(Device device, Match match, Court court) {
       // Create the post data.
-      Dictionary<string, string> formData = new() {
+      Dictionary<string, string?> formData = new() {
         { "courtid", court.CourtID.ToString() },
         { "matchid", match.MatchID.ToString() }
       };
@@ -355,7 +370,7 @@ namespace ScoreboardLiveApi {
     /// <param name="court">Court to be cleared</param>
     public async Task ClearCourt(Device device, Court court) {
       // Create the post data.
-      Dictionary<string, string> formData = new() {
+      Dictionary<string, string?> formData = new() {
         { "courtid", court.CourtID.ToString() },
         { "matchid", "0" }
       };
@@ -371,7 +386,7 @@ namespace ScoreboardLiveApi {
     /// <param name="tournamentMatchNumber">Tournament match number</param>
     public async Task<List<Match>> FindMatchBySequenceNumber(Device device, Tournament tournament, int tournamentMatchNumber) {
       // Create the post data.
-      Dictionary<string, string> formData = new() {
+      Dictionary<string, string?> formData = new() {
         { "tournamentid", tournament.TournamentID.ToString() },
         { "sequencenumber", tournamentMatchNumber.ToString() }
       };
@@ -387,7 +402,7 @@ namespace ScoreboardLiveApi {
     /// <returns>A list with matches with the supplied tag.</returns>
     public async Task<List<Match>> FindMatchByTag(Device device, string tag) {
       // Create the post data
-      Dictionary<string, string> formData = new() {
+      Dictionary<string, string?> formData = new() {
         { "tag", tag }
       };
       Match.MatchesResponse response = await SendRequest<Match.MatchesResponse>("api/match/get_matches", device, formData);
@@ -402,7 +417,7 @@ namespace ScoreboardLiveApi {
     /// <returns></returns>
     public async Task<List<Match>> FindMatchesByClass(Device device, int classId) {
       // Create the post data.
-      Dictionary<string, string> formData = new() {
+      Dictionary<string, string?> formData = new() {
         { "classid", classId.ToString() }
       };
       Match.MatchesResponse response = await SendRequest<Match.MatchesResponse>("api/match/get_matches", device, formData);
@@ -417,7 +432,7 @@ namespace ScoreboardLiveApi {
     /// <param name="tournamentClass">Class to add</param>
     public async Task<TournamentClass> CreateTournamentClass(Device device, Tournament tournament, TournamentClass tournamentClass) {
       // Create post data
-      Dictionary<string, string> formData = new() {
+      Dictionary<string, string?> formData = new() {
         { "description", tournamentClass.Description },
         { "tournamentid", tournament.TournamentID.ToString() },
         { "size", tournamentClass.Size.ToString() },
@@ -428,12 +443,12 @@ namespace ScoreboardLiveApi {
         formData.Add("parentclass", tournamentClass.ParentClassID.ToString());
       }
       TournamentClass.TournamentClassResponse response = await SendRequest<TournamentClass.TournamentClassResponse>("api/tournament/add_class", device, formData);
-      return response.TournamentClass;
+      return response?.TournamentClass ?? throw new Exception("Could create class; server returned null");
     }
 
     public async Task<Link> CreateLink(Device device, Tournament tournament, Link link) {
       // Create post data
-      Dictionary<string, string> formData = new() {
+      Dictionary<string, string?> formData = new() {
         { "tournamentid", tournament.TournamentID.ToString() },
         { "sourceclass", link.SourceClassID.ToString() },
         { "sourceplace", link.SourcePlace.ToString() },
@@ -442,7 +457,7 @@ namespace ScoreboardLiveApi {
       };
       // Send
       Link.LinkResponse response = await SendRequest<Link.LinkResponse>("api/tournament/create_link", device, formData);
-      return response.Link;
+      return response?.Link ?? throw new Exception("Could create link; server returned null");
     }
 
     /// <summary>
@@ -451,11 +466,11 @@ namespace ScoreboardLiveApi {
     /// <returns>Server response</returns>
     /// <param name="route">Server route</param>
     /// <param name="credentials">Device credentials. Null if no authorization should be used.</param>
-    /// <param name="postParams">Post parameters.</param>
+    /// <param name="postParams">Post parameters. Can be null if no parameters.</param>
     /// <typeparam name="T">The type of response to expect from the server.</typeparam>
-    private async Task<T> SendRequest<T>(string route, Device credentials, Dictionary<string, string> postParams) where T : ScoreboardResponse {
+    private async Task<T> SendRequest<T>(string route, Device? credentials, Dictionary<string, string?>? postParams) where T : ScoreboardResponse {
       // Create the request content.
-      Dictionary<string, string> formData = postParams != null ? new Dictionary<string, string>(postParams) : [];
+      Dictionary<string, string?> formData = postParams != null ? new Dictionary<string, string?>(postParams) : [];
       formData.Add("randomStuff", Guid.NewGuid().ToString("n"));
       HttpContent content = new FormUrlEncodedContent(formData);
       // Create the request
@@ -504,7 +519,7 @@ namespace ScoreboardLiveApi {
     /// <param name="httpResponse">The http request response to try and parse</param>
     /// <returns></returns>
     private async Task<T> TryReadResponse<T>(HttpResponseMessage httpResponse) where T : ScoreboardResponse {
-      T scoreboardResponse = null;
+      T? scoreboardResponse = null;
       try {
         scoreboardResponse = await JsonSerializer.DeserializeAsync<T>(await httpResponse.Content.ReadAsStreamAsync(), m_jsonDefaultOptions) as T;
       } catch (Exception e) {
@@ -513,7 +528,10 @@ namespace ScoreboardLiveApi {
           throw;
         }
       }
-      return scoreboardResponse;
+      if (scoreboardResponse != null) {
+        return scoreboardResponse;
+      }
+      throw new Exception("Message deserialization returned null value");
     }
 
     /// <summary>
@@ -556,6 +574,7 @@ namespace ScoreboardLiveApi {
     /// <param name="content"></param>
     /// <returns></returns>
     public static async Task<string> CalculateHMAC(Device device, HttpContent content) {
+      ArgumentNullException.ThrowIfNull(device.ClientToken);
       string hash;
       using (HMACSHA256 hmac = new(Encoding.ASCII.GetBytes(device.ClientToken))) {
         hash = device.DeviceCode + ByteArrayToHexString(hmac.ComputeHash(await content.ReadAsByteArrayAsync()));
@@ -570,6 +589,7 @@ namespace ScoreboardLiveApi {
     /// <param name="content"></param>
     /// <returns></returns>
     public static string CalculateHMAC(Device device, string content) {
+      ArgumentNullException.ThrowIfNull(device.ClientToken);
       string hash;
       using (HMACSHA256 hmac = new(Encoding.ASCII.GetBytes(device.ClientToken))) {
         hash = device.DeviceCode + ByteArrayToHexString(hmac.ComputeHash(Encoding.UTF8.GetBytes(content)));

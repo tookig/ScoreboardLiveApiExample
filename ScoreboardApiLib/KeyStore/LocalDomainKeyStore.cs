@@ -13,21 +13,20 @@ namespace ScoreboardLiveApi {
   /// </summary>
   [Serializable]
   public class LocalDomainKeyStore : IKeyStore, ISerializable {
-    private readonly Dictionary<string, List<Device>> m_devices;
+    private readonly Dictionary<string, List<Device>> m_devices = [];
 
-    public string DefaultDomain { get; set; }
+    public string DefaultDomain { get; set; } = "default";
 
     public LocalDomainKeyStore(string defaultDomain = "default") {
-      m_devices = [];
       DefaultDomain = defaultDomain;
     }
 
-    public Device Get(int unitId) {
+    public Device? Get(int unitId) {
       return Get(unitId, DefaultDomain);
     }
 
-    public Device Get(int unitId, string domain) {
-      if (m_devices.TryGetValue(domain, out List<Device> domainDevices)) {
+    public Device? Get(int unitId, string domain) {
+      if (m_devices.TryGetValue(domain, out List<Device>? domainDevices)) {
         return domainDevices.Find(device => device.UnitID == unitId);
       }
       return null;
@@ -38,10 +37,10 @@ namespace ScoreboardLiveApi {
     }
 
     public void Set(Device device, string domain) {
-      if (device == null) throw new ArgumentNullException(nameof(device), "Device reference cannot be null");
-      if (domain == null) throw new ArgumentNullException(nameof(domain), "Domain identifier reference cannot be null");
+      ArgumentNullException.ThrowIfNull(device);
+      ArgumentNullException.ThrowIfNull(domain);
 
-      if (!m_devices.TryGetValue(domain, out List<Device> domainDevices)) {
+      if (!m_devices.TryGetValue(domain, out List<Device>? domainDevices)) {
         domainDevices = [];
         m_devices.Add(domain, domainDevices);
       }
@@ -55,7 +54,7 @@ namespace ScoreboardLiveApi {
     }
 
     public void Remove(Device device, string domain) {
-      if (m_devices.TryGetValue(domain, out List<Device> domainDevices)) {
+      if (m_devices.TryGetValue(domain, out List<Device>? domainDevices)) {
         domainDevices.RemoveAll(savedDevice => device.UnitID == savedDevice.UnitID);
       }
     }
@@ -89,7 +88,7 @@ namespace ScoreboardLiveApi {
     private const string c_id_devices = "Settings.devices";
 
     protected LocalDomainKeyStore(SerializationInfo info, StreamingContext context) {
-      m_devices = (Dictionary<string, List<Device>>)info.GetValue(c_id_devices, typeof(Dictionary<string, List<Device>>));
+      m_devices = (info.GetValue(c_id_devices, typeof(Dictionary<string, List<Device>>)) as Dictionary<string, List<Device>>) ?? [];
     }
 
     public void GetObjectData(SerializationInfo info, StreamingContext context) {

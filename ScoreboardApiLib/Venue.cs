@@ -7,10 +7,10 @@ namespace ScoreboardLiveApi {
     public int VenueID { get; set; }
 
     [JsonPropertyName("name")]
-    public string Name { get; set; }
+    public string? Name { get; set; }
 
     public override string ToString() {
-      return String.Format("VenueID: {0}, Name: {1}", VenueID, Name);
+      return string.Format("VenueID: {0}, Name: {1}", VenueID, Name);
     }
   }
 }

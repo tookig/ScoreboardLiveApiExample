@@ -8,7 +8,7 @@ namespace ScoreboardLiveApi {
   public class Match {
     public class MatchResponse : ScoreboardResponse {
       [JsonPropertyName("match")]
-      public Match Match { get; set; }
+      public Match? Match { get; set; }
     }
 
     public class MatchesResponse : ScoreboardResponse {
@@ -30,56 +30,57 @@ namespace ScoreboardLiveApi {
     public int Place { get; set; }
 
     [JsonPropertyName("team1player1name")]
-    public string Team1Player1Name { get; set; }
+    public string? Team1Player1Name { get; set; }
     [JsonPropertyName("team1player1team")]
-    public string Team1Player1Team { get; set; }
+    public string? Team1Player1Team { get; set; }
 
     [JsonPropertyName("team1player2name")]
-    public string Team1Player2Name { get; set; }
+    public string? Team1Player2Name { get; set; }
     [JsonPropertyName("team1player2team")]
-    public string Team1Player2Team { get; set; }
+    public string? Team1Player2Team { get; set; }
 
     [JsonPropertyName("team2player1name")]
-    public string Team2Player1Name { get; set; }
+    public string? Team2Player1Name { get; set; }
     [JsonPropertyName("team2player1team")]
-    public string Team2Player1Team { get; set; }
+    public string? Team2Player1Team { get; set; }
 
     [JsonPropertyName("team2player2name")]
-    public string Team2Player2Name { get; set; }
+    public string? Team2Player2Name { get; set; }
     [JsonPropertyName("team2player2team")]
-    public string Team2Player2Team { get; set; }
+    public string? Team2Player2Team { get; set; }
 
     [JsonPropertyName("umpire")]
-    public string Umpire { get; set; }
+    public string? Umpire { get; set; }
     [JsonPropertyName("servicejudge")]
-    public string ServiceJudge { get; set; }
+    public string? ServiceJudge { get; set; }
 
     [JsonPropertyName("status")]
-    public string Status { get; set; }
+    public string? Status { get; set; }
 
     [JsonPropertyName("category")]
-    public string Category { get; set; }
+    public string? Category { get; set; }
 
     [JsonPropertyName("starttime")]
-    public string JsonStartTime { get; set; }
+    public string? JsonStartTime { get; set; }
 
     [JsonPropertyName("firstpoint")]
-    public string JsonFirstPoint { get; set; }
+    public string? JsonFirstPoint { get; set; }
 
     [JsonPropertyName("lastpoint")]
-    public string JsonLastPoint { get; set; }
+    public string? JsonLastPoint { get; set; }
 
     [JsonPropertyName("tag")]
-    public string Tag { get; set; }
+    public string? Tag { get; set; }
 
     [JsonPropertyName("logo1")]
-    public string Logo1 { get; set; }
+    public string? Logo1 { get; set; }
     [JsonPropertyName("logo2")]
-    public string Logo2 { get; set; }
+    public string? Logo2 { get; set; }
 
     [JsonIgnore]
     public DateTime StartTime {
       get {
+        ArgumentNullException.ThrowIfNull(JsonStartTime);
         return DateTime.ParseExact(JsonStartTime, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
       }
       set {
@@ -90,6 +91,7 @@ namespace ScoreboardLiveApi {
     [JsonIgnore]
     public DateTime FirstPoint {
       get {
+        ArgumentNullException.ThrowIfNull(JsonFirstPoint);
         return DateTime.ParseExact(JsonFirstPoint, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
       }
       set {
@@ -100,6 +102,7 @@ namespace ScoreboardLiveApi {
     [JsonIgnore]
     public DateTime LastPoint {
       get {
+        ArgumentNullException.ThrowIfNullOrEmpty(JsonLastPoint);
         return DateTime.ParseExact(JsonLastPoint, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
       }
       set {
@@ -119,23 +122,23 @@ namespace ScoreboardLiveApi {
       if ((i < 0) || (i > 3)) throw new ArgumentOutOfRangeException("i", "Player index must be in range 0..3");
       int t = (i / 2) + 1;
       int p = (i % 2) + 1;
-      string name = this.GetType().GetProperty(string.Format("Team{0}Player{1}Name", t, p)).GetValue(this, null) as string;
-      string team = this.GetType().GetProperty(string.Format("Team{0}Player{1}Team", t, p)).GetValue(this, null) as string;
-      return (name, team);
+      string? name = GetType()?.GetProperty(string.Format("Team{0}Player{1}Name", t, p))?.GetValue(this, null) as string;
+      string? team = GetType()?.GetProperty(string.Format("Team{0}Player{1}Team", t, p))?.GetValue(this, null) as string;
+      return (name ?? string.Empty, team ?? string.Empty);
     }
 
     public override string ToString() {
       StringBuilder sb = new StringBuilder();
       sb.AppendFormat("{0} {1} {2}{3}",
-        categoriesDescription[this.Category],
-        TournamentMatchNumber > 0 ? string.Format("({0})", TournamentMatchNumber) : "",
+        (Category != null && categoriesDescription.TryGetValue(Category, out string? categoryValue)) ? categoryValue : string.Empty,
+        TournamentMatchNumber > 0 ? string.Format("({0})", TournamentMatchNumber) : string.Empty,
         string.IsNullOrEmpty(JsonStartTime) ? "" : JsonStartTime,
         Environment.NewLine
       );
       sb.AppendLine("----------------------------------------------------");
       sb.AppendFormat("{0, -20}    {1, -20}{2}", Team1Player1Name, Team2Player1Name, Environment.NewLine);
       sb.AppendFormat("{0, -20} vs {1, -20}{2}", Team1Player1Team, Team2Player1Team, Environment.NewLine);
-      if (Category.EndsWith("d")) {
+      if (Category == null || Category.EndsWith("d")) {
         sb.AppendFormat("{0, -20}    {1, -20}{2}", Team1Player2Name, Team2Player2Name, Environment.NewLine);
         sb.AppendFormat("{0, -20}    {1, -20}{2}", Team1Player2Team, Team2Player2Team, Environment.NewLine);
       }

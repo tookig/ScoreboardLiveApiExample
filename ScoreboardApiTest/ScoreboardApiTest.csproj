@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ScoreboardApiLib\ScoreboardApiLib.csproj" />
+    <ProjectReference Include="..\ScoreboardApiLib\ScoreboardLiveApi.csproj" />
   </ItemGroup>
 
 </Project>

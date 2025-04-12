@@ -8,7 +8,7 @@ namespace ScoreboardLiveApi {
   public class Link {
     public class LinkResponse : ScoreboardResponse {
       [JsonPropertyName("link")]
-      public Link Link { get; set; }
+      public Link? Link { get; set; }
     }
     [JsonPropertyName("linkid"), JsonConverter(typeof(Converters.IntToString))]
     public int LinkID { get; set; }
@@ -23,6 +23,6 @@ namespace ScoreboardLiveApi {
     public int TargetMatchID { get; set; }
 
     [JsonPropertyName("targetteam")]
-    public string TargetTeam { get; set; }
+    public string? TargetTeam { get; set; }
   }
 }

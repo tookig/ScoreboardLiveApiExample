@@ -35,9 +35,9 @@ namespace ScoreboardLiveApi {
     /// </summary>
     /// <param name="statusCode">Http status code</param>
     /// <param name="response">Scoreboard live response</param>
-    public ScoreboardLiveApiException(HttpStatusCode statusCode, ScoreboardResponse response) : base(messageText(statusCode, response)) {
+    public ScoreboardLiveApiException(HttpStatusCode statusCode, ScoreboardResponse? response) : base(messageText(statusCode, response)) {
       StatusCode = statusCode;
-      ScoreboardApiErrors = new List<string>();
+      ScoreboardApiErrors = [];
       if ((response != null) && (response.Errors != null)) {
         ScoreboardApiErrors.AddRange(response.Errors);
       }
@@ -50,7 +50,7 @@ namespace ScoreboardLiveApi {
     public ScoreboardLiveApiException(HttpStatusCode statusCode) : this(statusCode, null) {
     }
 
-    private static string messageText(HttpStatusCode statusCode, ScoreboardResponse response) {
+    private static string messageText(HttpStatusCode statusCode, ScoreboardResponse? response) {
       StringBuilder sb = new StringBuilder();
       sb.AppendFormat("The request finished with status code {0} ({1}). ", statusCode, (int)statusCode);
       if ((response == null) || (response.Errors.Count == 0)) {

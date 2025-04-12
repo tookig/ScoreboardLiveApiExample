@@ -7,11 +7,11 @@ using System.Text;
 
 namespace ScoreboardLiveApiExample {
   class Test {
-    private static ApiHelper api = new ApiHelper("https://demo.scoreboardlive.se");
+    private static readonly ApiHelper api = new("https://demo.scoreboardlive.se");
     private static readonly string keyStoreFile = string.Format("{0}scoreboardTestDomainAppKeys.bin", AppDomain.CurrentDomain.BaseDirectory);
 
-    static async Task<Unit> SelectUnit() {
-      List<Unit> units = new List<Unit>();
+    static async Task<Unit?> SelectUnit() {
+      List<Unit> units = [];
       // First try and fetch all units to select from at server
       Console.Clear();
       Console.WriteLine("Fetching all available units from server");
@@ -26,22 +26,19 @@ namespace ScoreboardLiveApiExample {
       units.ForEach(unit => Console.WriteLine("{0}. {1}", i++, unit.Name));
       // Have the user select one
       Console.Write("Select a unit to use: ");
-      int.TryParse(Console.ReadLine(), out int selection);
-      // Check so that the number is valid
-      if (selection < 1 || selection > units.Count) {
-        return await SelectUnit();
-      }
-      return units[selection - 1];
+      return !int.TryParse(Console.ReadLine(), out int selection) || selection < 1 || selection > units.Count
+        ? await SelectUnit()
+        : units[selection - 1];
     }
 
-    static async Task<Device> RegisterWithUnit(Unit unit, LocalDomainKeyStore keyStore) {
+    static async Task<Device?> RegisterWithUnit(Unit unit, LocalDomainKeyStore keyStore) {
       // Get activation code from user
       Console.Clear();
       Console.WriteLine("This device is not registered with {0}.", unit.Name);
       Console.Write("Enter activation code for {0}: ", unit.Name);
-      string activationCode = Console.ReadLine().Trim();
+      string activationCode = Console.ReadLine()?.Trim() ?? string.Empty;
       // Register this code with the server
-      Device deviceCredentials = null;
+      Device? deviceCredentials = null;
       try {
         deviceCredentials = await api.RegisterDevice(activationCode);
       } catch (Exception e) {
@@ -58,7 +55,7 @@ namespace ScoreboardLiveApiExample {
 
     static async Task<bool> CheckCredentials(Unit unit, Device device, LocalDomainKeyStore keyStore) {
       Console.WriteLine("Checking so that the credentials on file for {0} are still valid...", unit.Name);
-      bool valid = false;
+      bool valid;
       try {
         valid = await api.CheckCredentials(device);
       } catch (Exception e) {
@@ -77,10 +74,10 @@ namespace ScoreboardLiveApiExample {
       return valid;
     }
 
-    static async Task<Tournament> SelectTournament(Unit unit, Device device) {
+    static async Task<Tournament?> SelectTournament(Unit unit, Device device) {
       Console.Clear();
       Console.WriteLine("Downloading latest tournaments for {0}...", unit.Name);
-      List<Tournament> tournaments = new List<Tournament>();
+      List<Tournament> tournaments = [];
       try {
         // Get the 10 newest tournaments for this unit
         tournaments.AddRange(await api.GetTournaments(device, 10));
@@ -104,24 +101,20 @@ namespace ScoreboardLiveApiExample {
         Console.WriteLine(" ({0})", tournament.TournamentType); 
       }
       Console.Write("Select a tournament (leave empty to let server decide): ");
-      int.TryParse(Console.ReadLine(), out int selection);
       // Return the selected tournament
-      if (selection == 0) {
-        return null;
-      } else if ((selection > 0) && (selection <= tournaments.Count)) {
-        return tournaments[selection - 1];
-      }
-      return await SelectTournament(unit, device);
+      return !int.TryParse(Console.ReadLine(), out int selection) || selection < 1 || selection > tournaments.Count
+        ? null
+        : tournaments[selection - 1];
     }
 
-    static async Task<Match> CreateRandomMatch(Device device, Tournament tournament) {
+    static async Task<Match?> CreateRandomMatch(Device device, Tournament tournament) {
       // Create a random match
       Console.Clear();
       Console.WriteLine("Creating a random match and uploading to server...");
       Match match = RandomStuff.RandomMatch();
       match.Tag = HashMatch(match);
       // Send request
-      Match serverMatch = null;
+      Match? serverMatch;
       try {
         serverMatch = await api.CreateOnTheFlyMatch(device, tournament, match);
       }
@@ -130,16 +123,16 @@ namespace ScoreboardLiveApiExample {
         return null;
       }
       Console.WriteLine("The following match was created:");
-      Console.WriteLine(serverMatch);
+      Console.WriteLine((Match?)null);
       Console.WriteLine();
-      return serverMatch;
+      return null;
     }
 
-    static async Task<Court> SelectCourt(Device device) {
+    static async Task<Court?> SelectCourt(Device device) {
       // Get courts from server
       Console.Clear();
       Console.WriteLine("Fetching all available courts from server...");
-      List<Court> courts = new List<Court>();
+      List<Court> courts = [];
       try {
          courts.AddRange(await api.GetCourts(device));
       }
@@ -150,15 +143,13 @@ namespace ScoreboardLiveApiExample {
       // List them for user to select
       int i = 1;
       foreach (Court court in courts) {
-        Console.WriteLine("{0}. {1} ({2})", i++, court.Name, court.Venue.Name);
+        Console.WriteLine("{0}. {1} ({2})", i++, court.Name, court.Venue?.Name ?? "unknown venue");
       }
       // Get user input
       Console.Write("Select a court: ");
-      int.TryParse(Console.ReadLine(), out int selection);
-      if ((selection < 1) || (selection > courts.Count)) {
-        return await SelectCourt(device);
-      }
-      return courts[selection - 1];
+      return int.TryParse(Console.ReadLine(), out int selection) || selection < 1 || selection > courts.Count
+        ? await SelectCourt(device)
+        : courts[selection - 1];
     }
 
     static async Task AssignMatchToCourt(Device device, Match match, Court court) {
@@ -175,7 +166,7 @@ namespace ScoreboardLiveApiExample {
     static async Task FindMatchOnServerUsingMatchnumber(Device device, Tournament tournament, int tournamentMatchNumber) {
       Console.WriteLine();
       Console.WriteLine("Trying to find match with tournament match number {0} on server", tournamentMatchNumber);
-      List<Match> matches = new List<Match>();
+      List<Match> matches = [];
       try {
         matches.AddRange(await api.FindMatchBySequenceNumber(device, tournament, tournamentMatchNumber));
       }
@@ -196,7 +187,7 @@ namespace ScoreboardLiveApiExample {
     static async Task FindMatchOnServerUsingTag(Device device, string tag) {
       Console.WriteLine();
       Console.WriteLine("Trying to find match with tag hash: {0}", tag);
-      List<Match> matches = new List<Match>();
+      List<Match> matches = [];
       try {
         matches.AddRange(await api.FindMatchByTag(device, tag));
       } catch (Exception e) {
@@ -215,22 +206,26 @@ namespace ScoreboardLiveApiExample {
 
     public static string HashMatch(Match match) {
       // Create the string to hash
-      string source = string.Concat(new string[]  {
-        match.Team1Player1Name, match.Team1Player1Team, match.Team1Player2Name, match.Team1Player2Team,
-        match.Team2Player1Name, match.Team2Player1Team, match.Team2Player2Name, match.Team2Player2Team,
+      string source = string.Concat([
+        match.Team1Player1Name ?? string.Empty,
+        match.Team1Player1Team ?? string.Empty,
+        match.Team1Player2Name ?? string.Empty,
+        match.Team1Player2Team ?? string.Empty,
+        match.Team2Player1Name ?? string.Empty,
+        match.Team2Player1Team ?? string.Empty,
+        match.Team2Player2Name ?? string.Empty,
+        match.Team2Player2Team ?? string.Empty,
         match.TournamentMatchNumber.ToString()
-      });
+      ]);
       // Hash the match string and return
       string hash;
-      using (SHA256 sha = SHA256.Create()) {
-        hash = ApiHelper.ByteArrayToHexString(sha.ComputeHash(Encoding.UTF8.GetBytes(source)));
-      }
+      hash = ApiHelper.ByteArrayToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(source)));
       return hash;
     }
 
-    static void Main(string[] args) {
+    public static void Main() {
       // Select a unit
-      Unit selectedUnit = SelectUnit().Result;
+      Unit? selectedUnit = SelectUnit().Result;
       if (selectedUnit == null) return;
       Console.WriteLine("Unit {0} was selected.", selectedUnit.Name);
 
@@ -241,7 +236,7 @@ namespace ScoreboardLiveApiExample {
       } catch (Exception e) {
         Console.WriteLine("Could not read the key store file: {0}", e.Message);
         Console.WriteLine("Creating a new key store. Press any key to continue.");
-        Console.ReadLine();
+        Console.ReadKey();
         keyStore = new LocalDomainKeyStore();
       }
       // Set the current domain for the key store
@@ -252,18 +247,27 @@ namespace ScoreboardLiveApiExample {
       }
 
       // Check the credentials to make sure they are still valid
-      Device deviceCredentials = keyStore.Get(selectedUnit.UnitID);
+      Device? deviceCredentials = keyStore.Get(selectedUnit.UnitID);
+      if (deviceCredentials == null) {
+        Console.WriteLine("Keystore did for some reason not contain the newly created device information. Press any key to quit...");
+        Console.ReadKey();
+        return;
+      }
       if (!CheckCredentials(selectedUnit, deviceCredentials, keyStore).Result) {
         Console.ReadKey();
         return;
       }
 
       // Select a tournament to add matches to
-      Tournament selectedTournament = SelectTournament(selectedUnit, deviceCredentials).Result;
+      Tournament? selectedTournament = SelectTournament(selectedUnit, deviceCredentials).Result;
+      if (selectedTournament == null) {
+        Console.ReadKey();
+        return;
+      }
       Console.WriteLine("Selected tournament: {0}", selectedTournament);
 
       // Create a random match
-      Match match = CreateRandomMatch(deviceCredentials, selectedTournament).Result;
+      Match? match = CreateRandomMatch(deviceCredentials, selectedTournament).Result;
       if (match == null) {
         Console.ReadKey();
         return;
@@ -271,7 +275,7 @@ namespace ScoreboardLiveApiExample {
       Console.WriteLine("Created a match with hash {0}", HashMatch(match));
 
       // Get a list of all available courts for the user to select
-      Court court = SelectCourt(deviceCredentials).Result;
+      Court? court = SelectCourt(deviceCredentials).Result;
       if (court == null) {
         Console.ReadKey();
         return;

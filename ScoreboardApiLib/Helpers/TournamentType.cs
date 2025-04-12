@@ -26,7 +26,7 @@ namespace ScoreboardLiveApi {
       return Value;
     }
 
-    public override bool Equals(object obj) {
+    public override bool Equals(object? obj) {
       if (obj == null || GetType() != obj.GetType()) {
         return false;
       }

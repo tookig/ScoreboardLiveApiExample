@@ -12,7 +12,7 @@ namespace ScoreboardLiveApi {
       m_devices = [];
     }
 
-    public Device Get(int unitId) {
+    public Device? Get(int unitId) {
       return m_devices.Find(device => device.UnitID == unitId);
     }
 
@@ -56,7 +56,7 @@ namespace ScoreboardLiveApi {
 
 #pragma warning disable IDE0060 // Remove unused parameter - needed for ISerializable
     protected LocalKeyStore(SerializationInfo info, StreamingContext context) {
-      m_devices = (List<Device>)info.GetValue(c_id_devices, typeof(List<Device>));
+      m_devices = info.GetValue(c_id_devices, typeof(List<Device>)) as List<Device> ?? [];
     }
 #pragma warning restore IDE0060 // Remove unused parameter
 

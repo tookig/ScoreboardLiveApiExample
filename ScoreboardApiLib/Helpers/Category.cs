@@ -23,15 +23,19 @@ namespace ScoreboardLiveApi {
         case "md": return MensDoubles;
         case "wd": return WomensDoubles;
         case "xd": return MixedDoubles;
-        default: throw new ArgumentException("Invalid tournament type value");
+        default: throw new ArgumentException("Invalid category type value");
       }
+    }
+
+    public bool IsSingles() {
+      return Value == MensSingles || Value == WomensSingles;
     }
 
     public override string ToString() {
       return Value;
     }
 
-    public override bool Equals(object obj) {
+    public override bool Equals(object? obj) {
       if (obj == null || GetType() != obj.GetType()) {
         return false;
       }

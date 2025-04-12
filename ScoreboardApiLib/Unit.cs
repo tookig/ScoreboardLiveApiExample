@@ -9,7 +9,7 @@ namespace ScoreboardLiveApi {
       public List<Unit> Units { get; set; }
 
       public UnitResponse() {
-        Units = new List<Unit>();
+        Units = [];
       }
     }
 
@@ -17,10 +17,10 @@ namespace ScoreboardLiveApi {
     public int UnitID { get; set; }
 
     [JsonPropertyName("name")]
-    public string Name { get; set; }
+    public string? Name { get; set; }
 
     public override string ToString() {
-      return String.Format("UnitID: {0}, Name: {1}", UnitID, Name);
+      return string.Format("UnitID: {0}, Name: {1}", UnitID, Name);
     }
   }
 }

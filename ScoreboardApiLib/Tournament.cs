@@ -16,7 +16,7 @@ namespace ScoreboardLiveApi {
 
     public class SingleTournamentResponse : ScoreboardResponse {
       [JsonPropertyName("tournament")]
-      public Tournament Tournament { get; set; }
+      public Tournament? Tournament { get; set; }
     }
 
     [JsonPropertyName("tournamentid"), JsonConverter(typeof(Converters.IntToString))]
@@ -26,40 +26,42 @@ namespace ScoreboardLiveApi {
     public int ParentTournamentID { get; set; }
 
     [JsonPropertyName("name")]
-    public string Name { get; set; }
+    public string? Name { get; set; }
 
     [JsonPropertyName("type")]
-    public string TournamentType { get; set; }
+    public string? TournamentType { get; set; }
 
     [JsonPropertyName("team1")]
-    public string Team1 { get; set; }
+    public string? Team1 { get; set; }
 
     [JsonPropertyName("team2")]
-    public string Team2 { get; set; }
+    public string? Team2 { get; set; }
 
     [JsonPropertyName("startdate")]
-    public string JsonStartDate { get; set; }
+    public string? JsonStartDate { get; set; }
     [JsonIgnore]
     public DateTime StartDate {
       get {
+        ArgumentNullException.ThrowIfNull(JsonStartDate);
         return DateTime.ParseExact(JsonStartDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
       }
     }
 
     [JsonPropertyName("enddate")]
-    public string JsonEndDate { get; set; }
+    public string? JsonEndDate { get; set; }
     [JsonIgnore]
     public DateTime EndDate {
       get {
+        ArgumentNullException.ThrowIfNull(JsonEndDate);
         return DateTime.ParseExact(JsonEndDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
       }
     }
 
     [JsonPropertyName("status")]
-    public string Status { get; set; }
+    public string? Status { get; set; }
 
     [JsonPropertyName("scoresystem")]
-    public string ScoreSystem { get; set; }
+    public string? ScoreSystem { get; set; }
 
     public override string ToString() {
       StringBuilder sb = new StringBuilder();

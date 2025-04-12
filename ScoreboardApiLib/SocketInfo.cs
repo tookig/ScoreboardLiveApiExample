@@ -6,7 +6,7 @@ namespace ScoreboardLiveApi {
   public class SocketInfo {
     public class SocketInfoResponse : ScoreboardResponse {
       [JsonPropertyName("uri")]
-      public string URL { get; set; }
+      public string? URL { get; set; }
     }
   }
 }

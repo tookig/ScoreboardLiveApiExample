@@ -7,17 +7,17 @@ namespace ScoreboardLiveApi {
   public class TournamentClass {
     public class TournamentClassResponse : ScoreboardResponse {
       [JsonPropertyName("class")]
-      public TournamentClass TournamentClass { get; set; }
+      public TournamentClass? TournamentClass { get; set; }
     }
 
     [JsonPropertyName("classid"), JsonConverter(typeof(Converters.IntToString))]
     public int ID { get; set; }
 
     [JsonPropertyName("category")]
-    public string Category { get; set; }
+    public string? Category { get; set; }
 
     [JsonPropertyName("description")]
-    public string Description { get; set; }
+    public string? Description { get; set; }
 
     [JsonPropertyName("tournament"), JsonConverter(typeof(Converters.IntToString))]
     public int TournamentID { get; set; }
@@ -29,11 +29,7 @@ namespace ScoreboardLiveApi {
     public int Size { get; set; }
 
     [JsonPropertyName("type")]
-    public string ClassType { get; set; }
-
-    public TournamentClass() {
-
-    }
+    public string? ClassType { get; set; }
 
     public override string ToString() {
       return string.Format("Class {0} - {1}", ID, Description);

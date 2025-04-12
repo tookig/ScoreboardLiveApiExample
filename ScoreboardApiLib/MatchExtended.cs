@@ -54,10 +54,10 @@ namespace ScoreboardLiveApi {
     public int ClassID { get; set; }
 
     [JsonPropertyName("classdescription")]
-    public string ClassDescription { get; set; }
+    public string? ClassDescription { get; set; }
 
     [JsonPropertyName("scoresystem")]
-    public string Scoresystem { get; set; }
+    public string? Scoresystem { get; set; }
 
     [JsonPropertyName("team1player1id")]
     public int Team1Player1ID { get; set; }
@@ -176,7 +176,7 @@ namespace ScoreboardLiveApi {
     public int ServerSequence { get; set; }
 
     [JsonPropertyName("special")]
-    public string Special { get; set; }
+    public string? Special { get; set; }
 
     public override string ToString() {
       StringBuilder sb = new StringBuilder();
