@@ -233,6 +233,9 @@ Search for matches.
 
 # Changelog
 
+#### 2025-04-19
+* Make all projects use the Nullable context.
+
 #### 2024-07-10
 * All projects now target .NET 8.0
 
